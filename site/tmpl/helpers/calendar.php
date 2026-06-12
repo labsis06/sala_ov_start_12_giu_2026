@@ -60,16 +60,33 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
         $inputSelector = $options['inputSelector'] ?? '#salaov_visit_date';
         $days = salaovBuildDayStatus($slots, $availability, $dayRules, $months);
         $monthNames = [1=>'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
-        $weekdayNames = ['L','M','M','G','V','S','D'];
+        $weekdayNames = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+        $weekdayFullNames = [1=>'Lunedì',2=>'Martedì',3=>'Mercoledì',4=>'Giovedì',5=>'Venerdì',6=>'Sabato',7=>'Domenica'];
         $grouped = [];
         foreach ($days as $dateKey => $info) { $grouped[$info['date']->format('Y-m')][$dateKey] = $info; }
         $uid = 'salaovcal' . substr(md5((string) microtime(true)), 0, 8);
         ob_start(); ?>
+        <style>
+        #<?php echo $uid; ?>.salaov-calendar{max-width:760px!important;margin:1rem auto 1.5rem!important;border:1px solid #d9e2ec!important;border-radius:12px!important;background:#fff!important;overflow:hidden!important}
+        #<?php echo $uid; ?> .salaov-weekdays,#<?php echo $uid; ?> .salaov-days{display:grid!important;grid-template-columns:repeat(7,1fr)!important;gap:6px!important;align-items:stretch!important;width:100%!important}
+        #<?php echo $uid; ?> .salaov-weekdays span{display:block!important;text-align:center!important;font-weight:900!important;padding:6px 2px!important;color:#1f2937!important}
+        #<?php echo $uid; ?> .salaov-day,#<?php echo $uid; ?> .salaov-empty{display:flex!important;width:100%!important;min-width:0!important;height:92px!important;min-height:92px!important;box-sizing:border-box!important;border-radius:8px!important}
+        #<?php echo $uid; ?> .salaov-empty{visibility:hidden!important}
+        #<?php echo $uid; ?> .salaov-day{flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;white-space:normal!important;line-height:1.15!important;padding:6px 4px!important;font-weight:900!important;border:1px solid rgba(0,0,0,.15)!important}
+        #<?php echo $uid; ?> .salaov-day-weekday,#<?php echo $uid; ?> .salaov-day-number,#<?php echo $uid; ?> .salaov-day-caption{display:block!important;width:100%!important;font-weight:900!important;text-align:center!important;line-height:1.12!important;margin:0!important;padding:0!important}
+        #<?php echo $uid; ?> .salaov-day-weekday{font-size:.82rem!important}
+        #<?php echo $uid; ?> .salaov-day-number{font-size:1.45rem!important}
+        #<?php echo $uid; ?> .salaov-day-caption{font-size:.76rem!important}
+        #<?php echo $uid; ?> .salaov-day-available{background:#198754!important;color:#fff!important}
+        #<?php echo $uid; ?> .salaov-day-pending{background:#ffc107!important;color:#212529!important}
+        #<?php echo $uid; ?> .salaov-day-unavailable{background:#dc3545!important;color:#fff!important}
+        @media(max-width:576px){#<?php echo $uid; ?> .salaov-weekdays,#<?php echo $uid; ?> .salaov-days{gap:3px!important}#<?php echo $uid; ?> .salaov-day,#<?php echo $uid; ?> .salaov-empty{height:78px!important;min-height:78px!important}#<?php echo $uid; ?> .salaov-day-weekday{font-size:.58rem!important}#<?php echo $uid; ?> .salaov-day-number{font-size:1.15rem!important}#<?php echo $uid; ?> .salaov-day-caption{font-size:.55rem!important}}
+        </style>
         <section id="<?php echo $uid; ?>" class="salaov-calendar card shadow-sm" aria-label="Calendario disponibilita Sala OV">
             <div class="card-body p-3">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
                     <div><h2 class="h5 mb-1">Calendario disponibilita</h2><p class="text-muted small mb-0">Naviga i mesi e seleziona un giorno disponibile.</p></div>
-                    <div class="salaov-legend small"><span class="salaov-dot bg-success"></span> Disponibile <span class="salaov-dot bg-warning"></span> Pending <span class="salaov-dot bg-danger"></span> Non disponibile</div>
+                    <div class="salaov-legend small"><span class="salaov-dot salaov-dot-available"></span> Disponibile <span class="salaov-dot salaov-dot-pending"></span> Richieste in attesa <span class="salaov-dot salaov-dot-unavailable"></span> Non disponibile <span class="salaov-legend-count">0/20 = prenotati/capienza</span></div>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary salaov-prev">&lsaquo;</button>
@@ -82,11 +99,32 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
                         <div class="salaov-weekdays"><?php foreach($weekdayNames as $w): ?><span><?php echo $w; ?></span><?php endforeach; ?></div>
                         <div class="salaov-days">
                             <?php for($i=0;$i<$offset;$i++): ?><span></span><?php endfor; ?>
-                            <?php foreach($monthDays as $dateKey=>$info): $disabled = (!$selectable || $info['status']==='unavailable'); $title=$info['label'].' '.$dateKey.' - posti '.max(0,$info['capacity']-$info['used']).'/'.$info['capacity'].($info['note']?' - '.$info['note']:''); ?>
-                                <button type="button" class="salaov-day salaov-day-<?php echo $info['status']; ?>" data-date="<?php echo htmlspecialchars($dateKey, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $disabled?'disabled':''; ?>>
-                                    <span><?php echo $info['date']->format('j'); ?></span><small><?php echo max(0,$info['capacity']-$info['used']); ?></small>
+                            <?php foreach($monthDays as $dateKey=>$info):
+                                $disabled = (!$selectable || $info['status']==='unavailable');
+                                $remaining = max(0, (int) $info['capacity'] - (int) $info['used']);
+                                $dayNumber = $info['date']->format('j');
+                                $weekdayNumber = (int) $info['date']->format('N');
+                                $weekdayShort = $weekdayNames[$weekdayNumber - 1] ?? '';
+                                $weekdayFull = $weekdayFullNames[$weekdayNumber] ?? '';
+                                $monthLabel = $monthNames[(int) $info['date']->format('n')] ?? '';
+                                $caption = $weekdayFull . ' ' . $dayNumber . ' ' . $monthLabel . ' - Visitatori ' . (int) $info['used'] . '/' . (int) $info['capacity'];
+                                if ($info['status'] === 'available') { $style = 'background:#198754;color:#ffffff;border-color:#198754;'; }
+                                elseif ($info['status'] === 'pending') { $style = 'background:#ffc107;color:#212529;border-color:#ffc107;'; }
+                                else { $style = 'background:#dc3545;color:#ffffff;border-color:#dc3545;'; }
+                                $title=$info['label'].' - '.$weekdayFull.' '.$dayNumber.' '.$monthLabel.' '.$info['date']->format('Y').' - visitatori '.(int)$info['used'].'/'.(int)$info['capacity'].' - posti residui '.$remaining.($info['note']?' - '.$info['note']:''); ?>
+                                <button type="button" class="salaov-day salaov-day-<?php echo $info['status']; ?>" style="<?php echo $style; ?>" data-date="<?php echo htmlspecialchars($dateKey, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars($caption, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $disabled?'disabled':''; ?>>
+                                    <strong class="salaov-day-weekday"><?php echo htmlspecialchars($weekdayFull, ENT_QUOTES, 'UTF-8'); ?></strong><br>
+                                    <strong class="salaov-day-number"><?php echo str_pad((string) $dayNumber, 2, '0', STR_PAD_LEFT); ?></strong><br>
+                                    <strong class="salaov-day-caption">capienza <?php echo (int) $info['used']; ?>/<?php echo (int) $info['capacity']; ?></strong>
                                 </button>
                             <?php endforeach; ?>
+                            <?php
+                                $lastInfo = end($monthDays);
+                                $lastWeekday = $lastInfo ? (int) $lastInfo['date']->format('N') : 7;
+                                for ($i = $lastWeekday; $i < 7; $i++):
+                            ?>
+                                <span class="salaov-empty" aria-hidden="true"></span>
+                            <?php endfor; ?>
                         </div>
                     </div>
                 <?php $idx++; endforeach; ?>

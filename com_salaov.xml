@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="component" method="upgrade">
+  <name>COM_SALAOV</name>
+  <element>com_salaov</element>
+  <author>Osservatorio Vesuviano</author>
+  <creationDate>2026-06-05</creationDate>
+  <version>1.2.0</version>
+  <description>COM_SALAOV_XML_DESCRIPTION</description>
+  <scriptfile>script.php</scriptfile>
+  <namespace path="src">Ov\Component\Salaov</namespace>
+  <install>
+    <sql><file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file></sql>
+  </install>
+  <uninstall>
+    <sql><file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file></sql>
+  </uninstall>
+  <files>
+    <filename>script.php</filename>
+  </files>
+  <files folder="site">
+    <folder>src</folder><folder>tmpl</folder><folder>language</folder>
+  </files>
+  <administration>
+    <menu img="class:calendar">COM_SALAOV_MENU</menu>
+    <submenu>
+      <menu link="option=com_salaov&amp;view=dashboard">COM_SALAOV_DASHBOARD</menu>
+      <menu link="option=com_salaov&amp;view=bookings">COM_SALAOV_BOOKINGS</menu>
+      <menu link="option=com_salaov&amp;view=availability">Calendario disponibilita</menu>
+      <menu link="option=com_salaov&amp;view=staff">Personale visite</menu>
+    </submenu>
+    <files folder="administrator">
+      <folder>services</folder><folder>src</folder><folder>tmpl</folder><folder>sql</folder><folder>language</folder>
+    </files>
+    <languages folder="administrator/language">
+      <language tag="it-IT">it-IT/it-IT.com_salaov.ini</language>
+      <language tag="it-IT">it-IT/it-IT.com_salaov.sys.ini</language>
+    </languages>
+  </administration>
+  <media destination="com_salaov" folder="media"><folder>css</folder></media>
+  <languages folder="site/language"><language tag="it-IT">it-IT/it-IT.com_salaov.ini</language></languages>
+  <config>
+    <fields name="params">
+      <fieldset name="basic" label="COM_SALAOV_CONFIG_BASIC">
+        <field name="approval_email" type="email" label="COM_SALAOV_CONFIG_EMAIL" default="" />
+        <field name="min_notice_days" type="number" label="COM_SALAOV_CONFIG_NOTICE" default="2" />
+      </fieldset>
+    </fields>
+  </config>
+</extension>

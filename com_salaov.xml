@@ -4,7 +4,7 @@
   <element>com_salaov</element>
   <author>Osservatorio Vesuviano</author>
   <creationDate>2026-06-05</creationDate>
-  <version>1.1.4</version>
+  <version>1.1.5</version>
   <description>COM_SALAOV_XML_DESCRIPTION</description>
   <scriptfile>script.php</scriptfile>
   <namespace path="src">Ov\Component\Salaov</namespace>

@@ -26,6 +26,13 @@ class BookingModel extends BaseDatabaseModel
         return $db->loadObjectList();
     }
 
+    public function getDaySlots()
+    {
+        $db = $this->getDatabase();
+        $db->setQuery('SELECT * FROM #__salaov_day_slots WHERE visit_date >= CURDATE() AND published = 1 ORDER BY visit_date ASC, ordering ASC, start_time ASC');
+        return $db->loadObjectList();
+    }
+
     public function getAvailability()
     {
         $db = $this->getDatabase();

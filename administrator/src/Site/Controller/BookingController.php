@@ -26,18 +26,33 @@ class BookingController extends BaseController
 
         $db = Factory::getContainer()->get('DatabaseDriver');
         $date = $app->input->getString('visit_date');
-        $slot = (int) $app->input->getInt('slot_id');
+        $slotInput = $app->input->getString('slot_id');
         $visitors = (int) $app->input->getInt('visitors');
+        $slot = 0;
+        $daySlotId = 0;
+        $isDaySlot = strpos($slotInput, 'd:') === 0;
+        if ($isDaySlot) { $daySlotId = (int) substr($slotInput, 2); }
+        else { $slot = (int) str_replace('w:', '', $slotInput); }
 
         $weekday = (int) (new \DateTimeImmutable($date))->format('N');
-        $db->setQuery('SELECT capacity, weekday FROM #__salaov_slots WHERE published = 1 AND id = ' . $slot);
-        $slotRow = $db->loadObject();
-        $capacity = $slotRow ? (int) $slotRow->capacity : 0;
-
-        if (!$slotRow || (int) $slotRow->weekday !== $weekday) {
-            $app->enqueueMessage('La fascia selezionata non corrisponde al giorno scelto.', 'error');
-            $this->setRedirect($redirect);
-            return;
+        if ($isDaySlot) {
+            $db->setQuery('SELECT capacity, visit_date FROM #__salaov_day_slots WHERE published = 1 AND id = ' . (int) $daySlotId);
+            $slotRow = $db->loadObject();
+            $capacity = $slotRow ? (int) $slotRow->capacity : 0;
+            if (!$slotRow || (string) $slotRow->visit_date !== $date) {
+                $app->enqueueMessage('La fascia specifica selezionata non corrisponde al giorno scelto.', 'error');
+                $this->setRedirect($redirect);
+                return;
+            }
+        } else {
+            $db->setQuery('SELECT capacity, weekday FROM #__salaov_slots WHERE published = 1 AND id = ' . (int) $slot);
+            $slotRow = $db->loadObject();
+            $capacity = $slotRow ? (int) $slotRow->capacity : 0;
+            if (!$slotRow || (int) $slotRow->weekday !== $weekday) {
+                $app->enqueueMessage('La fascia selezionata non corrisponde al giorno scelto.', 'error');
+                $this->setRedirect($redirect);
+                return;
+            }
         }
 
         $db->setQuery('SELECT available, capacity FROM #__salaov_day_capacity WHERE visit_date = ' . $db->quote($date));
@@ -55,7 +70,7 @@ class BookingController extends BaseController
             'SELECT COALESCE(SUM(visitors), 0) FROM #__salaov_bookings'
             . ' WHERE status IN (' . $db->quote('pending') . ',' . $db->quote('approved') . ')'
             . ' AND visit_date = ' . $db->quote($date)
-            . ' AND slot_id = ' . $slot
+            . ($isDaySlot ? ' AND day_slot_id = ' . (int) $daySlotId : ' AND slot_id = ' . (int) $slot . ' AND (day_slot_id IS NULL OR day_slot_id = 0)')
         );
         $used = (int) $db->loadResult();
 
@@ -68,6 +83,7 @@ class BookingController extends BaseController
         $booking = (object) [
             'user_id' => (int) $user->id,
             'slot_id' => $slot,
+            'day_slot_id' => $daySlotId ?: null,
             'visit_date' => $date,
             'first_name' => $app->input->getString('first_name'),
             'last_name' => $app->input->getString('last_name'),

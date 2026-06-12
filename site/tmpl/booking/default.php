@@ -20,7 +20,7 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
     <p>Seleziona un giorno disponibile dal calendario, scegli la fascia oraria e invia la richiesta. La prenotazione resta in attesa di approvazione.</p>
   </header>
 
-  <?php echo salaovRenderAvailabilityCalendar($this->slots ?? [], $this->availability ?? [], ['months' => 6, 'selectable' => true, 'inputSelector' => '#salaov_visit_date', 'dayRules' => $this->dayRules ?? []]); ?>
+  <?php echo salaovRenderAvailabilityCalendar($this->slots ?? [], $this->availability ?? [], ['months' => 6, 'selectable' => true, 'inputSelector' => '#salaov_visit_date', 'dayRules' => $this->dayRules ?? [], 'daySlots' => $this->daySlots ?? []]); ?>
 
   <?php if ($user->guest): ?>
     <div class="alert alert-warning salaov-alert">Per inviare una richiesta di prenotazione devi accedere con un utente Joomla registrato.</div>
@@ -31,9 +31,10 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
         <div class="row g-4">
           <div class="col-12"><h3 class="h5 border-bottom pb-2">Dati visita</h3></div>
           <div class="col-md-6"><label for="salaov_visit_date" class="form-label">Data visita</label><input id="salaov_visit_date" class="form-control" type="date" name="visit_date" required></div>
-          <div class="col-md-6"><label class="form-label">Fascia oraria</label><select class="form-select" name="slot_id" required>
-            <?php foreach ($this->slots as $s): ?><option value="<?php echo (int) $s->id; ?>"><?php echo $days[(int) $s->weekday] . ' - ' . htmlspecialchars($s->title, ENT_QUOTES, 'UTF-8') . ' ' . substr($s->start_time, 0, 5) . '-' . substr($s->end_time, 0, 5) . ' (max ' . (int) $s->capacity . ')'; ?></option><?php endforeach; ?>
-          </select></div>
+          <div class="col-md-6"><label class="form-label">Fascia oraria</label><select id="salaov_slot_id" class="form-select" name="slot_id" required>
+            <?php foreach ($this->slots as $s): ?><option value="w:<?php echo (int) $s->id; ?>" data-weekday="<?php echo (int) $s->weekday; ?>"><?php echo $days[(int) $s->weekday] . ' - ' . htmlspecialchars($s->title, ENT_QUOTES, 'UTF-8') . ' ' . substr($s->start_time, 0, 5) . '-' . substr($s->end_time, 0, 5) . ' (max ' . (int) $s->capacity . ')'; ?></option><?php endforeach; ?>
+            <?php foreach (($this->daySlots ?? []) as $s): ?><option value="d:<?php echo (int) $s->id; ?>" data-date="<?php echo htmlspecialchars($s->visit_date, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($s->visit_date . ' - ' . $s->title, ENT_QUOTES, 'UTF-8') . ' ' . substr($s->start_time, 0, 5) . '-' . substr($s->end_time, 0, 5) . ' (max ' . (int) $s->capacity . ')'; ?></option><?php endforeach; ?>
+          </select><div class="form-text">Le fasce vengono filtrate automaticamente dopo la scelta della data.</div></div>
 
           <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Referente</h3></div>
           <div class="col-md-6"><label class="form-label">Nome</label><input class="form-control" name="first_name" required></div>
@@ -53,3 +54,21 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
     </section>
   <?php endif; ?>
 </div>
+<script>
+(function(){
+  var dateInput=document.getElementById('salaov_visit_date');
+  var slotSelect=document.getElementById('salaov_slot_id');
+  if(!dateInput || !slotSelect) return;
+  function weekday(iso){ var d=new Date(iso+'T00:00:00'); return d.getDay()===0?7:d.getDay(); }
+  function filterSlots(){
+    var date=dateInput.value, wd=date?weekday(date):0, hasSpecific=false, first=null;
+    Array.prototype.forEach.call(slotSelect.options,function(o){ if(o.dataset.date===date) hasSpecific=true; });
+    Array.prototype.forEach.call(slotSelect.options,function(o){
+      var show = hasSpecific ? (o.dataset.date===date) : (!o.dataset.date && String(o.dataset.weekday)===String(wd));
+      o.hidden=!show; o.disabled=!show; if(show && !first) first=o;
+    });
+    if(first) slotSelect.value=first.value;
+  }
+  dateInput.addEventListener('change',filterSlots); filterSlots();
+})();
+</script>

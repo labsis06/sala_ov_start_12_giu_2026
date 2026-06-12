@@ -2,12 +2,17 @@
 \defined('_JEXEC') or die;
 
 if (!function_exists('salaovRenderAvailabilityCalendar')) {
-    function salaovBuildDayStatus(array $slots, array $availability, array $dayRules = [], int $months = 6): array
+    function salaovBuildDayStatus(array $slots, array $availability, array $dayRules = [], int $months = 6, array $daySlots = []): array
     {
         $slotsByWeekday = [];
         foreach ($slots as $slot) {
             $weekday = (int) $slot->weekday;
             $slotsByWeekday[$weekday] = ($slotsByWeekday[$weekday] ?? 0) + (int) $slot->capacity;
+        }
+        $specificCapacity = [];
+        foreach ($daySlots as $slot) {
+            $d = (string) $slot->visit_date;
+            $specificCapacity[$d] = ($specificCapacity[$d] ?? 0) + (int) $slot->capacity;
         }
         $rules = [];
         foreach ($dayRules as $rule) {
@@ -31,9 +36,12 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
             $capacity = $slotsByWeekday[$weekday] ?? 0;
             $availableRule = 1;
             $note = '';
+            if (isset($specificCapacity[$dateKey])) {
+                $capacity = (int) $specificCapacity[$dateKey];
+            }
             if (isset($rules[$dateKey])) {
                 $availableRule = (int) $rules[$dateKey]->available;
-                $capacity = (int) $rules[$dateKey]->capacity;
+                $capacity = isset($specificCapacity[$dateKey]) ? min($capacity, (int) $rules[$dateKey]->capacity) : (int) $rules[$dateKey]->capacity;
                 $note = (string) ($rules[$dateKey]->note ?? '');
             }
             $pending = $bookedByDate[$dateKey]['pending'] ?? 0;
@@ -58,7 +66,8 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
         $dayRules = $options['dayRules'] ?? [];
         $selectable = !empty($options['selectable']);
         $inputSelector = $options['inputSelector'] ?? '#salaov_visit_date';
-        $days = salaovBuildDayStatus($slots, $availability, $dayRules, $months);
+        $daySlots = $options['daySlots'] ?? [];
+        $days = salaovBuildDayStatus($slots, $availability, $dayRules, $months, $daySlots);
         $monthNames = [1=>'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
         $weekdayNames = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
         $weekdayFullNames = [1=>'Lunedì',2=>'Martedì',3=>'Mercoledì',4=>'Giovedì',5=>'Venerdì',6=>'Sabato',7=>'Domenica'];

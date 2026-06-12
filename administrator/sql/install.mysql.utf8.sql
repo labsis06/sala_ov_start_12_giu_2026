@@ -51,3 +51,20 @@ CREATE TABLE IF NOT EXISTS `#__salaov_day_capacity` (
   PRIMARY KEY (`id`), UNIQUE KEY `idx_visit_date` (`visit_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
 INSERT IGNORE INTO `#__salaov_staff` (`id`,`name`,`email`,`phone`,`published`) VALUES (1,'Personale OV','','',1);
+CREATE TABLE IF NOT EXISTS `#__salaov_day_slots` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `visit_date` date NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `capacity` int unsigned NOT NULL DEFAULT 20,
+  `published` tinyint NOT NULL DEFAULT 1,
+  `ordering` int NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`), KEY `idx_visit_date` (`visit_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `#__salaov_day_staff` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `visit_date` date NOT NULL,
+  `staff_id` int unsigned NOT NULL,
+  PRIMARY KEY (`id`), UNIQUE KEY `idx_day_staff` (`visit_date`,`staff_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;

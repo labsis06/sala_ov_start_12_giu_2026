@@ -67,6 +67,47 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
         $uid = 'salaovcal' . substr(md5((string) microtime(true)), 0, 8);
         ob_start(); ?>
         <style>
+#<?php echo $uid; ?> .salaov-legend {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+}
+
+#<?php echo $uid; ?> .salaov-legend-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    line-height: 1.2 !important;
+}
+
+#<?php echo $uid; ?> .salaov-dot {
+    display: inline-block !important;
+    width: 12px !important;
+    height: 12px !important;
+    min-width: 12px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    border: 1px solid rgba(0,0,0,.25) !important;
+}
+
+#<?php echo $uid; ?> .salaov-dot-available {
+    background: #198754 !important;
+}
+
+#<?php echo $uid; ?> .salaov-dot-pending {
+    background: #ffc107 !important;
+}
+
+#<?php echo $uid; ?> .salaov-dot-unavailable {
+    background: #dc3545 !important;
+}
+
+#<?php echo $uid; ?> .salaov-legend-count {
+    margin-top: 2px !important;
+    font-weight: 700 !important;
+}
+      
         #<?php echo $uid; ?>.salaov-calendar{max-width:760px!important;margin:1rem auto 1.5rem!important;border:1px solid #d9e2ec!important;border-radius:12px!important;background:#fff!important;overflow:hidden!important}
         #<?php echo $uid; ?> .salaov-weekdays,#<?php echo $uid; ?> .salaov-days{display:grid!important;grid-template-columns:repeat(7,1fr)!important;gap:6px!important;align-items:stretch!important;width:100%!important}
         #<?php echo $uid; ?> .salaov-weekdays span{display:block!important;text-align:center!important;font-weight:900!important;padding:6px 2px!important;color:#1f2937!important}
@@ -76,7 +117,7 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
         #<?php echo $uid; ?> .salaov-day-weekday,#<?php echo $uid; ?> .salaov-day-number,#<?php echo $uid; ?> .salaov-day-caption{display:block!important;width:100%!important;font-weight:900!important;text-align:center!important;line-height:1.12!important;margin:0!important;padding:0!important}
         #<?php echo $uid; ?> .salaov-day-weekday{font-size:.82rem!important}
         #<?php echo $uid; ?> .salaov-day-number{font-size:1.45rem!important}
-        #<?php echo $uid; ?> .salaov-day-caption{font-size:.76rem!important}
+        #<?php echo $uid; ?> .salaov-day-caption{font-size:.70rem!important}
         #<?php echo $uid; ?> .salaov-day-available{background:#198754!important;color:#fff!important}
         #<?php echo $uid; ?> .salaov-day-pending{background:#ffc107!important;color:#212529!important}
         #<?php echo $uid; ?> .salaov-day-unavailable{background:#dc3545!important;color:#fff!important}
@@ -85,9 +126,25 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
         <section id="<?php echo $uid; ?>" class="salaov-calendar card shadow-sm" aria-label="Calendario disponibilita Sala OV">
             <div class="card-body p-3">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                    <div><h2 class="h5 mb-1">Calendario disponibilita</h2><p class="text-muted small mb-0">Naviga i mesi e seleziona un giorno disponibile.</p></div>
-                    <div class="salaov-legend small"><span class="salaov-dot salaov-dot-available"></span> Disponibile <span class="salaov-dot salaov-dot-pending"></span> Richieste in attesa <span class="salaov-dot salaov-dot-unavailable"></span> Non disponibile <span class="salaov-legend-count">0/20 = prenotati/capienza</span></div>
-                </div>
+                    <div><h2 class="h5 mb-1">Calendario disponibilità</h2></div>
+                    
+   <div class="salaov-legend small">
+    <div class="salaov-legend-row">
+        <span class="salaov-dot salaov-dot-available"></span>
+        <span>Disponibile</span>
+    </div>
+    <div class="salaov-legend-row">
+        <span class="salaov-dot salaov-dot-pending"></span>
+        <span>Richieste in attesa</span>
+    </div>
+    <div class="salaov-legend-row">
+        <span class="salaov-dot salaov-dot-unavailable"></span>
+        <span>Non disponibile</span>
+    </div>
+    <div class="salaov-legend-count">0/20 = prenotati/capienza</div>
+</div>
+                
+            </div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary salaov-prev">&lsaquo;</button>
                     <strong class="salaov-current-month"></strong>

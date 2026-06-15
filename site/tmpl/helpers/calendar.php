@@ -139,7 +139,7 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
     border-radius:6px!important
 }
         #<?php echo $uid; ?> .salaov-empty{visibility:hidden!important}
-        #<?php echo $uid; ?> .salaov-day{flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;white-space:normal!important;line-height:1.15!important;padding:6px 4px!important;font-weight:900!important;border:1px solid rgba(0,0,0,.15)!important}
+        #<?php echo $uid; ?> .salaov-day{flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;white-space:normal!important;line-height:1.15!important;padding:3px 2px!important;font-weight:900!important;border:1px solid rgba(0,0,0,.15)!important}
         #<?php echo $uid; ?> .salaov-day-weekday,#<?php echo $uid; ?> .salaov-day-number,#<?php echo $uid; ?> .salaov-day-caption{display:block!important;width:100%!important;font-weight:900!important;text-align:center!important;line-height:1.12!important;margin:0!important;padding:0!important}
         #<?php echo $uid; ?> .salaov-day-weekday{font-size:.82rem!important}
         #<?php echo $uid; ?> .salaov-day-number{font-size:1.45rem!important}

@@ -9,8 +9,7 @@ require_once __DIR__ . '/../helpers/calendar.php';
 ?>
 <div class="salaov">
   <header class="salaov-page-header">
-    <p class="salaov-kicker">Osservatorio Vesuviano</p>
-    <h1>Disponibilita Sala OV</h1>
+    
     <p>Consulta i giorni disponibili per la visita alla Sala di Monitoraggio. Le richieste inviate restano in attesa di approvazione.</p>
   </header>
 

@@ -128,7 +128,16 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
 }
         #<?php echo $uid; ?> .salaov-weekdays,#<?php echo $uid; ?> .salaov-days{display:grid!important;grid-template-columns:repeat(7,1fr)!important;gap:6px!important;align-items:stretch!important;width:100%!important}
         #<?php echo $uid; ?> .salaov-weekdays span{display:block!important;text-align:center!important;font-weight:900!important;padding:6px 2px!important;color:#1f2937!important}
-        #<?php echo $uid; ?> .salaov-day,#<?php echo $uid; ?> .salaov-empty{display:flex!important;width:100%!important;min-width:0!important;height:92px!important;min-height:92px!important;box-sizing:border-box!important;border-radius:8px!important}
+        #<?php echo $uid; ?> .salaov-day,
+#<?php echo $uid; ?> .salaov-empty{
+    display:flex!important;
+    width:100%!important;
+    min-width:0!important;
+    height:72px!important;
+    min-height:72px!important;
+    box-sizing:border-box!important;
+    border-radius:6px!important
+}
         #<?php echo $uid; ?> .salaov-empty{visibility:hidden!important}
         #<?php echo $uid; ?> .salaov-day{flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;white-space:normal!important;line-height:1.15!important;padding:6px 4px!important;font-weight:900!important;border:1px solid rgba(0,0,0,.15)!important}
         #<?php echo $uid; ?> .salaov-day-weekday,#<?php echo $uid; ?> .salaov-day-number,#<?php echo $uid; ?> .salaov-day-caption{display:block!important;width:100%!important;font-weight:900!important;text-align:center!important;line-height:1.12!important;margin:0!important;padding:0!important}

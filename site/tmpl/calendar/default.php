@@ -4,7 +4,7 @@
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Router\Route;
 
-HTMLHelper::_('stylesheet', 'com_salaov/css/salaov.css', ['version' => 'auto', 'relative' => true]);
+
 require_once __DIR__ . '/../helpers/calendar.php';
 ?>
 <div class="salaov">

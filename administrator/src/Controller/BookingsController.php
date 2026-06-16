@@ -34,6 +34,18 @@ class BookingsController extends BaseController
         $staffId = $app->input->getInt('staff_id');
         $db      = Factory::getContainer()->get('DatabaseDriver');
 
+        $ids = array_values(array_filter(array_map('intval', $ids)));
+
+if (empty($ids)) {
+    $this->setRedirect(
+        'index.php?option=com_salaov&view=bookings',
+        'Seleziona almeno una prenotazione.',
+        'warning'
+    );
+    return;
+}
+
+
         if ($withStaff && !$staffId) {
             $this->setRedirect('index.php?option=com_salaov&view=bookings', 'Seleziona il personale che accompagnera la visita prima di approvare.', 'warning');
             return;

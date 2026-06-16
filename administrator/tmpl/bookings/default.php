@@ -13,6 +13,19 @@
 <table class="table table-striped table-hover"><thead><tr><th></th><th>Data</th><th>Fascia</th><th>Richiedente</th><th>Ente/Scuola</th><th>Visitatori</th><th>Stato</th><th>Personale</th><th>Contatti</th></tr></thead><tbody>
 <?php foreach($this->items as $i=>$r): ?><tr><td><input type="checkbox" name="cid[]" value="<?php echo (int)$r->id; ?>"></td><td><?php echo htmlspecialchars($r->visit_date); ?></td><td><?php echo htmlspecialchars($r->slot_title.' '.substr($r->start_time,0,5).'-'.substr($r->end_time,0,5)); ?></td><td><?php echo htmlspecialchars($r->first_name.' '.$r->last_name); ?></td><td><?php echo htmlspecialchars($r->organization); ?></td><td><?php echo (int)$r->visitors; ?></td><td><span class="badge bg-<?php echo $r->status==='approved'?'success':($r->status==='pending'?'warning':'secondary'); ?>"><?php echo htmlspecialchars($r->status); ?></span></td><td><?php echo htmlspecialchars($r->staff_label ?: $r->staff_name ?: '-'); ?></td><td><?php echo htmlspecialchars($r->email.' - '.$r->phone); ?></td></tr><?php endforeach; ?>
 </tbody></table>
-<p><button class="btn btn-primary" name="task" value="bookings.approve">Approva</button> <button class="btn btn-warning" name="task" value="bookings.reject">Rifiuta</button> <button class="btn btn-danger" name="task" value="bookings.cancel">Annulla</button></p>
+<input type="hidden" name="task" value="">
+<p>
+    <button type="button" class="btn btn-primary" onclick="Joomla.submitbutton('bookings.approve');">Approva</button>
+    <button type="button" class="btn btn-warning" onclick="Joomla.submitbutton('bookings.reject');">Rifiuta</button>
+    <button type="button" class="btn btn-danger" onclick="Joomla.submitbutton('bookings.cancel');">Annulla</button>
+</p>
+
+<script>
+Joomla.submitbutton = function(task) {
+    document.adminForm.task.value = task;
+    document.adminForm.submit();
+};
+</script>
+
 <?php echo HTMLHelper::_('form.token'); ?>
 </form>

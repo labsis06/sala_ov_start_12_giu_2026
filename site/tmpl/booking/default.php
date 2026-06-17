@@ -15,16 +15,17 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
 ?>
 <div class="salaov">
   <header class="salaov-page-header">
-    <p class="salaov-kicker">Osservatorio Vesuviano</p>
     <h1>Prenotazione visita Sala di Monitoraggio OV</h1>
     <p>Seleziona un giorno disponibile dal calendario, scegli la fascia oraria e invia la richiesta. La prenotazione resta in attesa di approvazione.</p>
   </header>
 
+  <?php if ($user->guest): ?>
+    <div class="alert alert-warning salaov-alert mb-4">Per inviare una richiesta di prenotazione devi accedere con un utente Joomla registrato.</div>
+  <?php endif; ?>
+
   <?php echo salaovRenderAvailabilityCalendar($this->slots ?? [], $this->availability ?? [], ['months' => 6, 'selectable' => true, 'inputSelector' => '#salaov_visit_date', 'dayRules' => $this->dayRules ?? [], 'daySlots' => $this->daySlots ?? []]); ?>
 
-  <?php if ($user->guest): ?>
-    <div class="alert alert-warning salaov-alert">Per inviare una richiesta di prenotazione devi accedere con un utente Joomla registrato.</div>
-  <?php else: ?>
+  <?php if (!$user->guest): ?>
     <section class="salaov-form-card">
       <h2>Richiesta di prenotazione</h2>
       <form method="post" action="<?php echo Route::_('index.php?option=com_salaov&task=booking.submit'); ?>" class="needs-validation" novalidate>

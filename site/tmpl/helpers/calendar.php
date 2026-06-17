@@ -145,8 +145,8 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
 #<?php echo $uid; ?> .salaov-empty{
     width:100%!important;
     min-width:0!important;
-    height:88px!important;
-    min-height:88px!important;
+    height:98px!important;
+    min-height:98px!important;
     border-radius:9px!important;
     box-sizing:border-box!important;
 }

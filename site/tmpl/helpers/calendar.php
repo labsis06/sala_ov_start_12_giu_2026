@@ -78,7 +78,7 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
         <style>
 #<?php echo $uid; ?>.salaov-calendar{
     width:100%!important;
-    max-width:760px!important;
+    max-width:900px!important;
     margin:1rem 0 1.5rem 0!important;
     border:1px solid #d6dee8!important;
     border-radius:14px!important;

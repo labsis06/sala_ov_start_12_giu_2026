@@ -19,6 +19,14 @@ class BookingModel extends BaseDatabaseModel
         return $db->loadObjectList();
     }
 
+    public function getLanguages()
+    {
+    $db = $this->getDatabase();
+    $db->setQuery('SELECT * FROM #__salaov_languages WHERE published = 1 ORDER BY title ASC');
+
+    return $db->loadObjectList();
+    }
+
     public function getDayRules()
     {
         $db = $this->getDatabase();

@@ -46,6 +46,18 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
           <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Gruppo visita</h3></div>
           <div class="col-md-8"><label class="form-label">Ente/Scuola</label><input class="form-control" name="organization" required></div>
           <div class="col-md-4"><label class="form-label">Numero visitatori</label><input class="form-control" type="number" name="visitors" min="1" value="1" required></div>
+          <div class="col-md-4">
+            <label class="form-label">Lingua visita</label>
+            <select class="form-select" name="language_id" required>
+            <option value="">Seleziona lingua</option>
+               <?php foreach (($this->languages ?? []) as $language): ?>
+                   <option value="<?php echo (int) $language->id; ?>">
+              <?php echo htmlspecialchars($language->title, ENT_QUOTES, 'UTF-8'); ?>
+                   </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          
           <div class="col-12"><label class="form-label">Note</label><textarea class="form-control" name="notes" rows="4" placeholder="Indica eventuali esigenze o informazioni utili"></textarea></div>
         </div>
         <input type="hidden" name="return" value="<?php echo htmlspecialchars($returnUrl, ENT_QUOTES, 'UTF-8'); ?>">

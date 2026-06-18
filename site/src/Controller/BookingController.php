@@ -79,6 +79,21 @@ class BookingController extends BaseController
             $this->setRedirect($redirect);
             return;
         }
+        
+        $languageId = $app->input->getInt('language_id');
+
+        $db->setQuery(
+                       'SELECT * FROM #__salaov_languages WHERE published = 1 AND id = ' . (int) $languageId
+                     );
+        $language = $db->loadObject();
+
+        if (!$language) {
+            $app->enqueueMessage('Seleziona una lingua valida per la visita.', 'error');
+            $this->setRedirect($redirect);
+            return;
+                        }
+
+
 
         $booking = (object) [
             'user_id' => (int) $user->id,
@@ -94,6 +109,8 @@ class BookingController extends BaseController
             'notes' => $app->input->getString('notes'),
             'status' => 'pending',
             'created' => Factory::getDate()->toSql(),
+            'language_id'   => (int) $language->id,
+            'language_name' => $language->title,
         ];
 
         $db->insertObject('#__salaov_bookings', $booking);
@@ -103,17 +120,47 @@ class BookingController extends BaseController
         $this->setRedirect($redirect);
     }
 
-    private function sendNotice($booking)
-    {
-        try {
-            $mailer = Factory::getMailer();
+   private function sendNotice($booking)
+{
+    try {
+        $db = Factory::getContainer()->get('DatabaseDriver');
+
+        $db->setQuery(
+            'SELECT name, email FROM #__salaov_admin_recipients WHERE published = 1 AND email <> "" ORDER BY name ASC'
+        );
+        $recipients = $db->loadObjectList();
+
+        if (!$recipients) {
             $config = Factory::getConfig();
-            $to = $config->get('mailfrom');
-            $mailer->addRecipient($to);
-            $mailer->setSubject('Nuova prenotazione Sala OV in attesa');
-            $mailer->setBody("Nuova richiesta per {$booking->visit_date}. Richiedente: {$booking->first_name} {$booking->last_name}, visitatori: {$booking->visitors}, ente: {$booking->organization}");
-            $mailer->Send();
-        } catch (\Throwable $e) {
+            $fallback = (string) $config->get('mailfrom');
+
+            if (!$fallback) {
+                return;
+            }
+
+            $recipients = [(object) ['name' => 'Amministratore', 'email' => $fallback]];
         }
+
+        $mailer = Factory::getMailer();
+
+        foreach ($recipients as $recipient) {
+            $mailer->addRecipient($recipient->email, $recipient->name);
+        }
+
+        $mailer->setSubject('Nuova prenotazione Sala OV in attesa');
+        $mailer->setBody(
+            "Nuova richiesta di prenotazione Sala OV.\n\n"
+            . "Data visita: {$booking->visit_date}\n"
+            . "Lingua visita: {$booking->language_name}\n"
+            . "Richiedente: {$booking->first_name} {$booking->last_name}\n"
+            . "Email: {$booking->email}\n"
+            . "Telefono: {$booking->phone}\n"
+            . "Visitatori: {$booking->visitors}\n"
+            . "Ente/Scuola: {$booking->organization}\n"
+        );
+
+        $mailer->Send();
+    } catch (\Throwable $e) {
     }
+}
 }

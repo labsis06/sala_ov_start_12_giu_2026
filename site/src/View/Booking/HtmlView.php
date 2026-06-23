@@ -15,6 +15,7 @@ class HtmlView extends BaseHtmlView
     $this->dayRules=method_exists($model,'getDayRules')?$model->getDayRules():[]; 
     $this->daySlots=method_exists($model,'getDaySlots')?$model->getDaySlots():[];
     $this->languages = method_exists($model, 'getLanguages') ? $model->getLanguages() : []; 
+    $this->visitLevels = method_exists($model, 'getVisitLevels') ? $model->getVisitLevels() : [];
     parent::display($tpl); 
     } 
     

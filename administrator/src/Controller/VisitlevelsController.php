@@ -24,6 +24,23 @@ class VisitlevelsController extends BaseController
         $priority    = $app->input->getInt('priority', 0);
         $ordering    = $app->input->getInt('ordering', 0);
         $published   = $app->input->getInt('published', 1);
+        
+        $allowedIcons = [
+            'tier_1_basic_school.svg',
+            'tier_2_standard_school.svg',
+            'tier_3_scientific.svg',
+            'tier_4_institutional.svg',
+            'tier_5_premium_delegation.svg',
+            'tier_6_vip_head_of_state.svg',
+            'tier_media_attention.svg',
+        'tier_other_neutral.svg',
+        ];
+
+$icon = $app->input->getString('icon', 'tier_other_neutral.svg');
+
+if (!in_array($icon, $allowedIcons, true)) {
+    $icon = 'tier_other_neutral.svg';
+}
 
         if ($title === '') {
             $this->setRedirect(
@@ -37,6 +54,7 @@ class VisitlevelsController extends BaseController
         $data = [
             'title'       => $title,
             'description' => $description,
+            'icon'        => $icon,
             'priority'    => $priority,
             'ordering'    => $ordering,
             'published'   => $published ? 1 : 0,

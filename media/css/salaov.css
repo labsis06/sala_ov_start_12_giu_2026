@@ -59,3 +59,29 @@
 .salaov-calendar .salaov-day-weekday{font-size:.82rem!important}.salaov-calendar .salaov-day-number{font-size:1.45rem!important}.salaov-calendar .salaov-day-caption{font-size:.76rem!important}
 .salaov-calendar .salaov-day-available{background:#198754!important;color:#fff!important}.salaov-calendar .salaov-day-pending{background:#ffc107!important;color:#212529!important}.salaov-calendar .salaov-day-unavailable{background:#dc3545!important;color:#fff!important}
 @media(max-width:576px){.salaov-calendar .salaov-weekdays,.salaov-calendar .salaov-days{gap:3px!important}.salaov-calendar .salaov-day,.salaov-calendar .salaov-empty{height:78px!important;min-height:78px!important}.salaov-calendar .salaov-day-weekday{font-size:.58rem!important}.salaov-calendar .salaov-day-number{font-size:1.15rem!important}.salaov-calendar .salaov-day-caption{font-size:.55rem!important}}
+
+
+.salaov-level-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+}
+
+.salaov-level-preview-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid #dbe3ec;
+    border-radius: 10px;
+    background: #f8fafc;
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.salaov-level-preview-icon {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    flex: 0 0 34px;
+}

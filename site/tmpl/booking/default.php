@@ -64,6 +64,21 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
           <div class="col-md-8">
     <label class="form-label">Livello visita</label>
     <select class="form-select" name="visit_level_id" required>
+      <div class="salaov-level-preview mt-3">
+    <?php foreach (($this->visitLevels ?? []) as $level): ?>
+        <?php
+        $icon = $level->icon ?: 'tier_other_neutral.svg';
+        ?>
+        <div class="salaov-level-preview-item">
+            <img
+                src="<?php echo Uri::root(true); ?>/media/com_salaov/icons/visit-levels/<?php echo htmlspecialchars($icon, ENT_QUOTES, 'UTF-8'); ?>"
+                alt=""
+                class="salaov-level-preview-icon"
+            >
+            <span><?php echo htmlspecialchars($level->title, ENT_QUOTES, 'UTF-8'); ?></span>
+        </div>
+    <?php endforeach; ?>
+</div>
         <option value="">Seleziona livello visita</option>
         <?php foreach (($this->visitLevels ?? []) as $level): ?>
             <option value="<?php echo (int) $level->id; ?>">

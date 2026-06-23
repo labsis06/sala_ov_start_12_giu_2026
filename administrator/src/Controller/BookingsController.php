@@ -178,10 +178,23 @@ if (empty($ids)) {
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename=salaov_prenotazioni.csv');
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['ID','Data','Fascia','Nome','Cognome','Email','Telefono','Ente/Scuola','Visitatori','Stato','Personale','Note']);
+        fputcsv($out, ['ID','Data','Fascia','Nome','Cognome','Email','Telefono','Ente/Scuola','Livello visita','Visitatori','Stato','Personale','Note']);
         foreach ($rows as $r) {
-            fputcsv($out, [$r['id'],$r['visit_date'],$r['slot_title'].' '.$r['start_time'].'-'.$r['end_time'],$r['first_name'],$r['last_name'],$r['email'],$r['phone'],$r['organization'],$r['visitors'],$r['status'],$r['staff_label'],$r['notes']]);
-        }
+           fputcsv($out, [
+    $r['id'],
+    $r['visit_date'],
+    $r['slot_title'] . ' ' . $r['start_time'] . '-' . $r['end_time'],
+    $r['first_name'],
+    $r['last_name'],
+    $r['email'],
+    $r['phone'],
+    $r['organization'],
+    $r['visit_level_label'],
+    $r['visitors'],
+    $r['status'],
+    $r['staff_label'],
+    $r['notes']
+]);
         fclose($out);
         Factory::getApplication()->close();
     }

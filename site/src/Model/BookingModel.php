@@ -27,6 +27,18 @@ class BookingModel extends BaseDatabaseModel
     return $db->loadObjectList();
     }
 
+    public function getVisitLevels()
+{
+    $db = $this->getDatabase();
+
+    $db->setQuery(
+        'SELECT * FROM #__salaov_visit_levels WHERE published = 1 ORDER BY ordering ASC, priority DESC, title ASC'
+    );
+
+    return $db->loadObjectList();
+}
+
+
     public function getDayRules()
     {
         $db = $this->getDatabase();

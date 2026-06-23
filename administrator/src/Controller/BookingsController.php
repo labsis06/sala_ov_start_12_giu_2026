@@ -306,6 +306,7 @@ if (empty($ids)) {
     $r['staff_label'],
     $r['notes']
 ]);
+}
         fclose($out);
         Factory::getApplication()->close();
     }

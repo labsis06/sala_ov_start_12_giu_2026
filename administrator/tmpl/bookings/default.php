@@ -29,14 +29,6 @@ $days = [
 ];
 ?>
 
-<form action="<?php echo Route::_('index.php?option=com_salaov&view=bookings'); ?>" method="post" name="adminForm" id="adminForm">
-    <h1>Prenotazioni Sala OV</h1>
-
-    <p>
-        <a class="btn btn-success" href="<?php echo Route::_('index.php?option=com_salaov&task=bookings.export'); ?>">
-            Export CSV
-        </a>
-    </p>
 
     <?php if ($edit): ?>
         <div class="card border-primary mb-4">
@@ -174,6 +166,16 @@ $days = [
             </div>
         </div>
     <?php endif; ?>
+
+<form action="<?php echo Route::_('index.php?option=com_salaov&view=bookings'); ?>" method="post" name="adminForm" id="adminForm">
+    <h1>Prenotazioni Sala OV</h1>
+
+    <p>
+        <a class="btn btn-success" href="<?php echo Route::_('index.php?option=com_salaov&task=bookings.export'); ?>">
+            Export CSV
+        </a>
+    </p>
+
 
     <div class="card mb-3">
         <div class="card-body">

@@ -182,9 +182,14 @@ $visitLevelLabel = $visitLevels[$visitLevel];
             $mailer->addRecipient($recipient->email, $recipient->name);
         }
 
-        $mailer->setSubject('Nuova prenotazione Sala OV in attesa');
+        $mailer->setSubject(
+           $booking->status === 'approved'
+            ? 'Nuova prenotazione Sala OV approvata direttamente'
+            : 'Nuova prenotazione Sala OV in attesa'
+        );
         $mailer->setBody(
             "Nuova richiesta di prenotazione Sala OV.\n\n"
+            . "Stato richiesta: {$booking->status}\n"
             . "Data visita: {$booking->visit_date}\n"
             . "Lingua visita: {$booking->language_name}\n"
             . "Livello visita: {$booking->visit_level_label}\n"

@@ -10,6 +10,10 @@ HTMLHelper::_('stylesheet', 'com_salaov/css/salaov.css', ['version' => 'auto', '
 require_once __DIR__ . '/../helpers/calendar.php';
 
 $user = Factory::getApplication()->getIdentity();
+$canApproveDirectly = $user && !$user->guest && (
+    $user->authorise('core.admin') ||
+    $user->authorise('core.manage', 'com_salaov')
+);
 $days = [1 => 'Lunedi', 2 => 'Martedi', 3 => 'Mercoledi', 4 => 'Giovedi', 5 => 'Venerdi', 6 => 'Sabato', 7 => 'Domenica'];
 $returnUrl = base64_encode(Uri::getInstance()->toString());
 ?>
@@ -74,6 +78,27 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
           </div>
           <div class="col-12"><label class="form-label">Note</label><textarea class="form-control" name="notes" rows="4" placeholder="Indica eventuali esigenze o informazioni utili"></textarea></div>
         </div>
+        <?php if ($canApproveDirectly): ?>
+    <div class="col-12">
+        <div class="alert alert-info mb-0">
+            <div class="form-check">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="salaov_approve_now"
+                    name="approve_now"
+                    value="1"
+                >
+                <label class="form-check-label fw-bold" for="salaov_approve_now">
+                    Approva direttamente questa richiesta
+                </label>
+            </div>
+            <div class="small mt-1">
+                Opzione visibile solo agli utenti con permessi amministrativi. Se selezionata, la prenotazione verrà salvata direttamente come approvata.
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
         <input type="hidden" name="return" value="<?php echo htmlspecialchars($returnUrl, ENT_QUOTES, 'UTF-8'); ?>">
         <?php echo HTMLHelper::_('form.token'); ?>
         <div class="d-flex justify-content-end mt-4"><button type="submit" class="btn btn-primary btn-lg">Invia richiesta</button></div>

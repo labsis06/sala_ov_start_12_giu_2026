@@ -239,7 +239,20 @@ $days = [
                     </td>
 
                     <td>
-                        <?php echo htmlspecialchars($r->visit_level_label ?: '-', ENT_QUOTES, 'UTF-8'); ?>
+                        <?php
+                                $levelIcon = $r->visit_level_icon ?: 'tier_other_neutral.svg';
+                        ?>
+
+                                <span class="d-inline-flex align-items-center gap-2">
+                                    <img
+                                        src="../media/com_salaov/icons/visit-levels/<?php echo htmlspecialchars($levelIcon, ENT_QUOTES, 'UTF-8'); ?>"
+                                        alt=""
+                                        style="width:34px;height:34px;object-fit:contain"
+                                    >
+                                    <span>
+                                        <?php echo htmlspecialchars($r->visit_level_label ?: '-', ENT_QUOTES, 'UTF-8'); ?>
+                                    </span>
+                                </span>
                     </td>
 
                     <td>

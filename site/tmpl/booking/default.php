@@ -57,7 +57,23 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
               <?php endforeach; ?>
             </select>
           </div>
-          
+          <div class="col-md-8">
+    <label class="form-label">Livello visita</label>
+    <select class="form-select" name="visit_level" required>
+        <option value="">Seleziona livello visita</option>
+        <option value="school_primary">Scolaresca scuola primaria</option>
+        <option value="school_secondary">Scolaresca scuola secondaria</option>
+        <option value="university_research">Università / Ricerca</option>
+        <option value="technical_scientific">Visita tecnica / scientifica</option>
+        <option value="institutional">Visita istituzionale</option>
+        <option value="high_institutional">Alta istituzione / delegazione</option>
+        <option value="media_press">Stampa / media</option>
+        <option value="other">Altro</option>
+    </select>
+    <div class="form-text">
+        Indica il livello della visita per aiutare l'organizzazione e l'assegnazione del personale.
+    </div>
+          </div>
           <div class="col-12"><label class="form-label">Note</label><textarea class="form-control" name="notes" rows="4" placeholder="Indica eventuali esigenze o informazioni utili"></textarea></div>
         </div>
         <input type="hidden" name="return" value="<?php echo htmlspecialchars($returnUrl, ENT_QUOTES, 'UTF-8'); ?>">

@@ -93,16 +93,19 @@ class BookingController extends BaseController
             return;
                         }
 
-        $visitLevels = [
-    'school_primary'       => 'Scolaresca scuola primaria',
-    'school_secondary'     => 'Scolaresca scuola secondaria',
-    'university_research'  => 'Università / Ricerca',
-    'technical_scientific' => 'Visita tecnica / scientifica',
-    'institutional'        => 'Visita istituzionale',
-    'high_institutional'   => 'Alta istituzione / delegazione',
-    'media_press'          => 'Stampa / media',
-    'other'                => 'Altro',
-    ];
+        $visitLevelId = $app->input->getInt('visit_level_id');
+
+$db->setQuery(
+    'SELECT * FROM #__salaov_visit_levels WHERE published = 1 AND id = ' . (int) $visitLevelId
+);
+
+$visitLevel = $db->loadObject();
+
+if (!$visitLevel) {
+    $app->enqueueMessage('Seleziona un livello visita valido.', 'error');
+    $this->setRedirect($redirect);
+    return;
+}
 
 $visitLevel = $app->input->getCmd('visit_level', '');
 
@@ -130,8 +133,8 @@ $visitLevelLabel = $visitLevels[$visitLevel];
             'created' => Factory::getDate()->toSql(),
             'language_id'   => (int) $language->id,
             'language_name' => $language->title,
-            'visit_level'       => $visitLevel,
-            'visit_level_label' => $visitLevelLabel,
+            'visit_level_id'    => (int) $visitLevel->id,
+            'visit_level_label' => $visitLevel->title,
         ];
 
         $db->insertObject('#__salaov_bookings', $booking);

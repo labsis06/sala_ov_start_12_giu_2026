@@ -28,6 +28,13 @@ class BookingController extends BaseController
         $date = $app->input->getString('visit_date');
         $slotInput = $app->input->getString('slot_id');
         $visitors = (int) $app->input->getInt('visitors');
+        $canApproveDirectly = $user && !$user->guest && (
+            $user->authorise('core.admin') ||
+            $user->authorise('core.manage', 'com_salaov')
+        );
+
+$approveNow = $canApproveDirectly && $app->input->getInt('approve_now', 0) === 1;
+$bookingStatus = $approveNow ? 'approved' : 'pending';
         $slot = 0;
         $daySlotId = 0;
         $isDaySlot = strpos($slotInput, 'd:') === 0;
@@ -129,7 +136,7 @@ $visitLevelLabel = $visitLevels[$visitLevel];
             'organization' => $app->input->getString('organization'),
             'visitors' => $visitors,
             'notes' => $app->input->getString('notes'),
-            'status' => 'pending',
+            'status' => $bookingStatus,
             'created' => Factory::getDate()->toSql(),
             'language_id'   => (int) $language->id,
             'language_name' => $language->title,

@@ -104,6 +104,37 @@ foreach (($this->items ?? []) as $item) {
                         placeholder="Descrizione interna facoltativa"
                     ><?php echo htmlspecialchars($edit->description ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
                 </div>
+                
+                <div class="col-md-6">
+    <label class="form-label" for="visit-level-icon">Icona livello</label>
+    <select id="visit-level-icon" name="icon" class="form-select">
+        <?php
+        $icons = [
+            'tier_1_basic_school.svg'       => 'Livello 1 - Scolaresca primaria',
+            'tier_2_standard_school.svg'    => 'Livello 2 - Scolaresca secondaria',
+            'tier_3_scientific.svg'         => 'Livello 3 - Tecnico/scientifica',
+            'tier_4_institutional.svg'      => 'Livello 4 - Istituzionale',
+            'tier_5_premium_delegation.svg' => 'Livello 5 - Premium delegazione',
+            'tier_6_vip_head_of_state.svg'  => 'Livello 6 - VIP massima autorità',
+            'tier_media_attention.svg'      => 'Stampa / media',
+            'tier_other_neutral.svg'        => 'Altro / neutro',
+        ];
+
+        $selectedIcon = $edit->icon ?? 'tier_other_neutral.svg';
+        ?>
+
+        <?php foreach ($icons as $file => $label): ?>
+            <option value="<?php echo htmlspecialchars($file, ENT_QUOTES, 'UTF-8'); ?>"
+                <?php echo $selectedIcon === $file ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+
+    <div class="form-text">
+        L'icona evidenzia visivamente il livello di importanza della visita.
+    </div>
+</div>
 
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary">

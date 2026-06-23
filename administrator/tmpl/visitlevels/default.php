@@ -162,6 +162,7 @@ foreach (($this->items ?? []) as $item) {
             <table class="table table-striped table-hover align-middle mb-0">
                 <thead>
                     <tr>
+                        <th>Icona</th>
                         <th>Titolo</th>
                         <th>Descrizione</th>
                         <th>Priorità</th>
@@ -181,6 +182,17 @@ foreach (($this->items ?? []) as $item) {
                     <?php else: ?>
                         <?php foreach ($this->items as $row): ?>
                             <tr>
+
+                                <td>
+                                    <?php
+                                        $icon = $row->icon ?: 'tier_other_neutral.svg';
+                                    ?>
+                                    <img
+                                        src="../media/com_salaov/icons/visit-levels/<?php echo htmlspecialchars($icon, ENT_QUOTES, 'UTF-8'); ?>"
+                                        alt=""
+                                        style="width:42px;height:42px;object-fit:contain"
+                                    >
+                                </td>
                                 <td>
                                     <strong><?php echo htmlspecialchars($row->title, ENT_QUOTES, 'UTF-8'); ?></strong>
                                 </td>

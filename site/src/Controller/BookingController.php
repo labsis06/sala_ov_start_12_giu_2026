@@ -114,15 +114,7 @@ if (!$visitLevel) {
     return;
 }
 
-$visitLevel = $app->input->getCmd('visit_level', '');
 
-if (!isset($visitLevels[$visitLevel])) {
-    $app->enqueueMessage('Seleziona un livello visita valido.', 'error');
-    $this->setRedirect($redirect);
-    return;
-}
-
-$visitLevelLabel = $visitLevels[$visitLevel];
 
         $booking = (object) [
             'user_id' => (int) $user->id,

@@ -93,7 +93,26 @@ class BookingController extends BaseController
             return;
                         }
 
+        $visitLevels = [
+    'school_primary'       => 'Scolaresca scuola primaria',
+    'school_secondary'     => 'Scolaresca scuola secondaria',
+    'university_research'  => 'Università / Ricerca',
+    'technical_scientific' => 'Visita tecnica / scientifica',
+    'institutional'        => 'Visita istituzionale',
+    'high_institutional'   => 'Alta istituzione / delegazione',
+    'media_press'          => 'Stampa / media',
+    'other'                => 'Altro',
+    ];
 
+$visitLevel = $app->input->getCmd('visit_level', '');
+
+if (!isset($visitLevels[$visitLevel])) {
+    $app->enqueueMessage('Seleziona un livello visita valido.', 'error');
+    $this->setRedirect($redirect);
+    return;
+}
+
+$visitLevelLabel = $visitLevels[$visitLevel];
 
         $booking = (object) [
             'user_id' => (int) $user->id,
@@ -111,6 +130,8 @@ class BookingController extends BaseController
             'created' => Factory::getDate()->toSql(),
             'language_id'   => (int) $language->id,
             'language_name' => $language->title,
+            'visit_level'       => $visitLevel,
+            'visit_level_label' => $visitLevelLabel,
         ];
 
         $db->insertObject('#__salaov_bookings', $booking);
@@ -152,6 +173,7 @@ class BookingController extends BaseController
             "Nuova richiesta di prenotazione Sala OV.\n\n"
             . "Data visita: {$booking->visit_date}\n"
             . "Lingua visita: {$booking->language_name}\n"
+            . "Livello visita: {$booking->visit_level_label}\n"
             . "Richiedente: {$booking->first_name} {$booking->last_name}\n"
             . "Email: {$booking->email}\n"
             . "Telefono: {$booking->phone}\n"

@@ -170,6 +170,117 @@ if (empty($ids)) {
         }
     }
 
+
+    public function saveEdit(): void
+    {
+    Session::checkToken() or die('Invalid token');
+
+    $app = Factory::getApplication();
+    $db  = Factory::getContainer()->get('DatabaseDriver');
+
+    $id = $app->input->getInt('id', 0);
+
+    if ($id <= 0) {
+        $this->setRedirect(
+            'index.php?option=com_salaov&view=bookings',
+            'Prenotazione non valida.',
+            'error'
+        );
+        return;
+    }
+
+    $languageId   = $app->input->getInt('language_id', 0);
+    $visitLevelId = $app->input->getInt('visit_level_id', 0);
+    $staffId      = $app->input->getInt('staff_id_edit', 0);
+    $slotId       = $app->input->getInt('slot_id_edit', 0);
+
+    $languageName = '';
+    if ($languageId > 0) {
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('title'))
+            ->from($db->quoteName('#__salaov_languages'))
+            ->where($db->quoteName('id') . ' = ' . (int) $languageId);
+
+        $db->setQuery($query);
+        $languageName = (string) $db->loadResult();
+    }
+
+    $visitLevelLabel = '';
+    if ($visitLevelId > 0) {
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('title'))
+            ->from($db->quoteName('#__salaov_visit_levels'))
+            ->where($db->quoteName('id') . ' = ' . (int) $visitLevelId);
+
+        $db->setQuery($query);
+        $visitLevelLabel = (string) $db->loadResult();
+    }
+
+    $staffName = '';
+    if ($staffId > 0) {
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('name'))
+            ->from($db->quoteName('#__salaov_staff'))
+            ->where($db->quoteName('id') . ' = ' . (int) $staffId);
+
+        $db->setQuery($query);
+        $staffName = (string) $db->loadResult();
+    }
+
+    $allowedStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
+    $status = $app->input->getCmd('status', 'pending');
+
+    if (!in_array($status, $allowedStatuses, true)) {
+        $status = 'pending';
+    }
+
+    $visitDate = $app->input->getString('visit_date', '');
+
+    if ($visitDate === '') {
+        $this->setRedirect(
+            'index.php?option=com_salaov&view=bookings&edit=' . (int) $id,
+            'La data visita è obbligatoria.',
+            'warning'
+        );
+        return;
+    }
+
+    $sets = [
+        $db->quoteName('visit_date') . ' = ' . $db->quote($visitDate),
+        $db->quoteName('slot_id') . ' = ' . (int) $slotId,
+        $db->quoteName('day_slot_id') . ' = NULL',
+        $db->quoteName('first_name') . ' = ' . $db->quote($app->input->getString('first_name', '')),
+        $db->quoteName('last_name') . ' = ' . $db->quote($app->input->getString('last_name', '')),
+        $db->quoteName('email') . ' = ' . $db->quote($app->input->getString('email', '')),
+        $db->quoteName('phone') . ' = ' . $db->quote($app->input->getString('phone', '')),
+        $db->quoteName('organization') . ' = ' . $db->quote($app->input->getString('organization', '')),
+        $db->quoteName('visitors') . ' = ' . (int) $app->input->getInt('visitors', 1),
+        $db->quoteName('language_id') . ' = ' . (int) $languageId,
+        $db->quoteName('language_name') . ' = ' . $db->quote($languageName),
+        $db->quoteName('visit_level_id') . ' = ' . (int) $visitLevelId,
+        $db->quoteName('visit_level_label') . ' = ' . $db->quote($visitLevelLabel),
+        $db->quoteName('staff_id') . ' = ' . (int) $staffId,
+        $db->quoteName('staff_name') . ' = ' . $db->quote($staffName),
+        $db->quoteName('status') . ' = ' . $db->quote($status),
+        $db->quoteName('notes') . ' = ' . $db->quote($app->input->getString('notes', '')),
+        $db->quoteName('modified') . ' = NOW()',
+    ];
+
+    $query = $db->getQuery(true)
+        ->update($db->quoteName('#__salaov_bookings'))
+        ->set($sets)
+        ->where($db->quoteName('id') . ' = ' . (int) $id);
+
+    $db->setQuery($query)->execute();
+
+    $this->setRedirect(
+        'index.php?option=com_salaov&view=bookings',
+        'Prenotazione modificata correttamente.'
+    );
+    }
+
+
+
     public function export()
     {
         $db = Factory::getContainer()->get('DatabaseDriver');

@@ -147,7 +147,11 @@ $visitLevelLabel = $visitLevels[$visitLevel];
         $db->insertObject('#__salaov_bookings', $booking);
         $this->sendNotice($booking);
 
-        $app->enqueueMessage('Richiesta inviata. La prenotazione e in attesa di approvazione.');
+        if ($approveNow) {
+          $app->enqueueMessage('Richiesta inviata e approvata direttamente.');
+        } else {
+          $app->enqueueMessage('Richiesta inviata. La prenotazione e in attesa di approvazione.');
+        }
         $this->setRedirect($redirect);
     }
 

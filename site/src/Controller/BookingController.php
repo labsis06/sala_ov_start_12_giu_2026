@@ -66,7 +66,7 @@ $bookingStatus = $approveNow ? 'approved' : 'pending';
         $dayRule = $db->loadObject();
         if ($dayRule) {
             if (!(int) $dayRule->available) {
-                $app->enqueueMessage('Il giorno selezionato non e disponibile.', 'error');
+                $app->enqueueMessage('Il giorno selezionato non è disponibile.', 'error');
                 $this->setRedirect($redirect);
                 return;
             }
@@ -142,7 +142,7 @@ if (!$visitLevel) {
         if ($approveNow) {
           $app->enqueueMessage('Richiesta inviata e approvata direttamente.');
         } else {
-          $app->enqueueMessage('Richiesta inviata. La prenotazione e in attesa di approvazione.');
+          $app->enqueueMessage('Richiesta inviata. La prenotazione è in attesa di approvazione.');
         }
         $this->setRedirect($redirect);
     }

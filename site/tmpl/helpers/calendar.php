@@ -287,7 +287,7 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
                                 <button type="button" class="salaov-day salaov-day-<?php echo $info['status']; ?>" style="<?php echo $style; ?>" data-date="<?php echo htmlspecialchars($dateKey, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars($caption, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $disabled?'disabled':''; ?>>
                                     <strong class="salaov-day-weekday"><?php echo htmlspecialchars($weekdayFull, ENT_QUOTES, 'UTF-8'); ?></strong><br>
                                     <strong class="salaov-day-number"><?php echo str_pad((string) $dayNumber, 2, '0', STR_PAD_LEFT); ?></strong><br>
-                                    <strong class="salaov-day-caption">capienza <?php echo (int) $info['used']; ?>/<?php echo (int) $info['capacity']; ?></strong>
+                                    <strong class="salaov-day-caption">prenotati <?php echo (int) $info['used']; ?>/<?php echo (int) $info['capacity']; ?></strong>
                                 </button>
                             <?php endforeach; ?>
                             <?php

@@ -35,7 +35,7 @@ class BookingsModel extends BaseDatabaseModel
     public function getStaff()
     {
         $db = $this->getDatabase();
-        $db->setQuery('SELECT id, name FROM #__salaov_staff WHERE published = 1 ORDER BY name ASC');
+       $db->setQuery('SELECT id, name, spoken_language FROM #__salaov_staff WHERE published = 1 ORDER BY name ASC');
 
         return $db->loadObjectList();
     }

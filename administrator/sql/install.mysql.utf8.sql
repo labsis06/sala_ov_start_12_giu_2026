@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS `#__salaov_staff` (
   `name` varchar(190) NOT NULL,
   `email` varchar(190) NULL,
   `phone` varchar(60) NULL,
+  `spoken_language` varchar(190) NULL,
   `published` tinyint NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
@@ -50,7 +51,7 @@ CREATE TABLE IF NOT EXISTS `#__salaov_day_capacity` (
   `note` varchar(255) NULL,
   PRIMARY KEY (`id`), UNIQUE KEY `idx_visit_date` (`visit_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
-INSERT IGNORE INTO `#__salaov_staff` (`id`,`name`,`email`,`phone`,`published`) VALUES (1,'Personale OV','','',1);
+INSERT IGNORE INTO `#__salaov_staff` (`id`,`name`,`email`,`phone`,`spoken_language`,`published`) VALUES (1,'Personale OV','','','Italiano',1);
 CREATE TABLE IF NOT EXISTS `#__salaov_day_slots` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `visit_date` date NOT NULL,

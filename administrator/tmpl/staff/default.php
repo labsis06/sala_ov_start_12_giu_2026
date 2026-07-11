@@ -31,6 +31,11 @@ foreach ($this->items as $item) {
                 <label class="form-label" for="staff-phone">Telefono</label>
                 <input id="staff-phone" class="form-control" name="phone" value="<?php echo htmlspecialchars($edit->phone ?? '', ENT_QUOTES, 'UTF-8'); ?>">
             </div>
+            <div class="col-md-3">
+                <label class="form-label" for="staff-spoken-language">Lingua parlata</label>
+               <input id="staff-spoken-language" class="form-control" name="spoken_language" placeholder="es. Italiano, Inglese" value="<?php echo htmlspecialchars($edit->spoken_language ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+               <div class="form-text">Indica una o più lingue parlate dal personale.</div>
+            </div>
             <div class="col-md-2">
                 <label class="form-label" for="staff-published">Stato</label>
                 <select id="staff-published" class="form-select" name="published">
@@ -55,6 +60,7 @@ foreach ($this->items as $item) {
             <th>Nome</th>
             <th>Email</th>
             <th>Telefono</th>
+            <th>Lingua parlata</th>
             <th>Stato</th>
             <th class="text-end">Azioni</th>
         </tr>
@@ -65,6 +71,7 @@ foreach ($this->items as $item) {
             <td><?php echo htmlspecialchars($r->name, ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($r->email, ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($r->phone, ENT_QUOTES, 'UTF-8'); ?></td>
+            <td><?php echo htmlspecialchars($r->spoken_language ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
             <td><span class="badge bg-<?php echo $r->published ? 'success' : 'secondary'; ?>"><?php echo $r->published ? 'Attivo' : 'Non attivo'; ?></span></td>
             <td class="text-end">
                 <a class="btn btn-sm btn-outline-primary" href="index.php?option=com_salaov&view=staff&edit=<?php echo (int) $r->id; ?>">Modifica</a>

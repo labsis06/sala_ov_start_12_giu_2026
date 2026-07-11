@@ -140,7 +140,7 @@ $days = [
                             <option value="0">Nessun personale</option>
                             <?php foreach (($this->staff ?? []) as $s): ?>
                                 <option value="<?php echo (int) $s->id; ?>" <?php echo ((int) $edit->staff_id === (int) $s->id) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($s->name, ENT_QUOTES, 'UTF-8'); ?>
+                                    <?php echo htmlspecialchars($s->name . (!empty($s->spoken_language) ? ' - ' . $s->spoken_language : ''), ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -187,7 +187,7 @@ $days = [
                 <option value="">Seleziona personale...</option>
                 <?php foreach (($this->staff ?? []) as $s): ?>
                     <option value="<?php echo (int) $s->id; ?>">
-                        <?php echo htmlspecialchars($s->name, ENT_QUOTES, 'UTF-8'); ?>
+                        <?php echo htmlspecialchars($s->name . (!empty($s->spoken_language) ? ' - ' . $s->spoken_language : ''), ENT_QUOTES, 'UTF-8'); ?>
                     </option>
                 <?php endforeach; ?>
             </select>

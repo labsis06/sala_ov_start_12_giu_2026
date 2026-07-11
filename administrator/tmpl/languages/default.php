@@ -1,7 +1,8 @@
 <?php
-\defined('_JEXEC') or die;
+defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Router\Route;
 
 $editId = (int) ($_GET['edit'] ?? 0);
 $edit = null;
@@ -15,8 +16,13 @@ foreach ($this->items as $item) {
 ?>
 
 <h1>Lingue visite</h1>
-
-<div class="card mb-4">
+<div class="d-flex justify-content-end mb-3">
+    <a class="btn btn-outline-secondary"
+       href="<?php echo Route::_('index.php?option=com_salaov'); ?>">
+        Torna alla dashboard
+    </a>
+ 
+    </div>    <div class="card mb-4">
     <div class="card-header">
         <strong><?php echo $edit ? 'Modifica lingua' : 'Aggiungi lingua'; ?></strong>
     </div>

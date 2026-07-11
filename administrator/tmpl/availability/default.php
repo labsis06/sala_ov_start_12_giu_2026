@@ -1,10 +1,43 @@
-<?php defined('_JEXEC') or die; use Joomla\CMS\HTML\HTMLHelper;
-$staff=$this->staff ?? [];
-$slotsByDate=[]; foreach(($this->daySlots ?? []) as $s){ $slotsByDate[$s->visit_date][]=$s; }
-$staffByDate=[]; foreach(($this->dayStaff ?? []) as $s){ $staffByDate[$s->visit_date][]=$s; }
-$weekdayLabels=[1=>'Lunedi',2=>'Martedi',3=>'Mercoledi',4=>'Giovedi',5=>'Venerdi',6=>'Sabato',7=>'Domenica'];
+<?php
+
+defined('_JEXEC') or die;
+
+use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Router\Route;$staff = $this->staff ?? [];
+
+$slotsByDate = [];
+
+foreach (($this->daySlots ?? []) as $s) {
+    $slotsByDate[$s->visit_date][] = $s;
+}
+
+$staffByDate = [];
+
+foreach (($this->dayStaff ?? []) as $s) {
+    $staffByDate[$s->visit_date][] = $s;
+}
+
+$weekdayLabels = [
+    1 => 'Lunedì',
+    2 => 'Martedì',
+    3 => 'Mercoledì',
+    4 => 'Giovedì',
+    5 => 'Venerdì',
+    6 => 'Sabato',
+    7 => 'Domenica',
+];
 ?>
+
+
 <h1>Gestione calendario disponibilita Sala OV</h1>
+
+<div class="d-flex justify-content-end mb-3">
+    <a class="btn btn-outline-secondary"
+       href="<?php echo Route::_('index.php?option=com_salaov'); ?>">
+        Torna alla dashboard
+    </a>
+ 
+    </div>        
 <div class="alert alert-info">Da questa sezione puoi applicare disponibilita, fasce orarie e personale a un intervallo di date oppure personalizzare un singolo giorno cliccandolo nel calendario.</div>
 
 <div class="row g-4">

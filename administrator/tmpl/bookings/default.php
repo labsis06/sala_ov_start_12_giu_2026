@@ -166,16 +166,25 @@ $days = [
             </div>
         </div>
     <?php endif; ?>
+        
+       
 
 <form action="<?php echo Route::_('index.php?option=com_salaov&view=bookings'); ?>" method="post" name="adminForm" id="adminForm">
     <h1>Prenotazioni Sala OV</h1>
-
-    <p>
+   <div class="d-flex justify-content-end mb-3">
+    <a class="btn btn-outline-secondary"
+       href="<?php echo Route::_('index.php?option=com_salaov'); ?>">
+        Torna alla dashboard
+    </a>
+ 
+    </div>        
+   
+<p>
         <a class="btn btn-success" href="<?php echo Route::_('index.php?option=com_salaov&task=bookings.export'); ?>">
             Export CSV
         </a>
-    </p>
-
+    </p> 
+ 
 
     <div class="card mb-3">
         <div class="card-body">

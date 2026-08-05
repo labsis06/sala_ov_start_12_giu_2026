@@ -3,7 +3,8 @@
 defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Router\Route;$staff = $this->staff ?? [];
+use Joomla\CMS\Router\Route;
+$staff = $this->staff ?? [];
 
 $slotsByDate = [];
 

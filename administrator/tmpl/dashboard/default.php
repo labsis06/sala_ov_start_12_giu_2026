@@ -13,6 +13,7 @@
 <p>
     <a class="btn btn-primary" href="index.php?option=com_salaov&view=bookings">Gestisci prenotazioni</a>
     <a class="btn btn-secondary" href="index.php?option=com_salaov&view=availability">Configura calendario disponibilita</a>
+    <a class="btn btn-secondary" href="index.php?option=com_salaov&view=staff">Personale visite</a>
     <a class="btn btn-secondary" href="index.php?option=com_salaov&view=languages">Lingue visite</a>
     <a class="btn btn-secondary" href="index.php?option=com_salaov&view=adminrecipients">Destinatari email admin</a>
     <a class="btn btn-secondary" href="index.php?option=com_salaov&view=visitlevels">Livelli visita</a>

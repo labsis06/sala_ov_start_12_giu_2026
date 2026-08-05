@@ -69,6 +69,7 @@ if (empty($ids)) {
 
         $updated = 0;
         $emailsSent = 0;
+        $adminEmailsSent = 0;
 
         foreach ($ids as $id) {
             $id = (int) $id;
@@ -93,10 +94,12 @@ if (empty($ids)) {
             $db->setQuery($query)->execute();
             $updated++;
 
-            if ($withStaff && !empty($staff->email)) {
-                if ($this->sendStaffAssignmentEmail($id, $staff)) {
+            if ($withStaff) {
+                if (!empty($staff->email) && $this->sendStaffAssignmentEmail($id, $staff)) {
                     $emailsSent++;
                 }
+
+                $adminEmailsSent += $this->sendAdminStatusEmail($id, $status, $staff);
             }
         }
 
@@ -106,6 +109,10 @@ if (empty($ids)) {
                 $message .= ' Email inviata al personale assegnato: ' . $emailsSent . '.';
             } elseif ($staff && empty($staff->email)) {
                 $message .= ' Nessuna email inviata: il personale selezionato non ha un indirizzo email configurato.';
+            }
+
+            if ($adminEmailsSent > 0) {
+                $message .= ' Email inviata agli amministratori: ' . $adminEmailsSent . '.';
             }
         } else {
             $message = 'Stato aggiornato.';
@@ -168,6 +175,95 @@ if (empty($ids)) {
             Factory::getApplication()->enqueueMessage('Errore invio email al personale: ' . $e->getMessage(), 'warning');
             return false;
         }
+    }
+
+
+    private function sendAdminStatusEmail(int $bookingId, string $status, ?object $staff = null): int
+    {
+        try {
+            $booking = $this->getBookingForEmail($bookingId);
+            $recipients = $this->getAdminRecipients();
+
+            if (!$booking || !$recipients) {
+                return 0;
+            }
+
+            $sent = 0;
+            foreach ($recipients as $recipient) {
+                if (empty($recipient->email)) {
+                    continue;
+                }
+
+                $mailer = Factory::getMailer();
+                $mailer->addRecipient($recipient->email, $recipient->name);
+                $mailer->setSubject('Prenotazione Sala OV approvata - ' . $booking->visit_date);
+                $mailer->setBody($this->buildBookingEmailBody($booking, $status, $staff));
+
+                if ($mailer->Send() === true) {
+                    $sent++;
+                }
+            }
+
+            return $sent;
+        } catch (\Throwable $e) {
+            Factory::getApplication()->enqueueMessage('Errore invio email agli amministratori: ' . $e->getMessage(), 'warning');
+            return 0;
+        }
+    }
+
+    private function getAdminRecipients(): array
+    {
+        $db = Factory::getContainer()->get('DatabaseDriver');
+        $db->setQuery('SELECT name, email FROM #__salaov_admin_recipients WHERE published = 1 AND email <> "" ORDER BY name ASC');
+        $recipients = $db->loadObjectList();
+
+        if ($recipients) {
+            return $recipients;
+        }
+
+        $config = Factory::getApplication()->getConfig();
+        $fallback = (string) $config->get('mailfrom');
+
+        return $fallback ? [(object) ['name' => 'Amministratore', 'email' => $fallback]] : [];
+    }
+
+    private function getBookingForEmail(int $bookingId): ?object
+    {
+        $db = Factory::getContainer()->get('DatabaseDriver');
+        $query = $db->getQuery(true)
+            ->select([
+                'b.*',
+                's.title AS slot_title',
+                's.start_time',
+                's.end_time',
+            ])
+            ->from($db->quoteName('#__salaov_bookings', 'b'))
+            ->join('LEFT', $db->quoteName('#__salaov_slots', 's') . ' ON s.id = b.slot_id')
+            ->where('b.id = ' . (int) $bookingId);
+        $db->setQuery($query);
+        $booking = $db->loadObject();
+
+        return $booking ?: null;
+    }
+
+    private function buildBookingEmailBody(object $booking, string $status, ?object $staff = null): string
+    {
+        $slot = trim(($booking->slot_title ?: 'Fascia oraria') . ' ' . substr((string) $booking->start_time, 0, 5) . '-' . substr((string) $booking->end_time, 0, 5));
+        $staffName = $staff->name ?? $booking->staff_name ?? '';
+
+        return "Prenotazione Sala OV aggiornata.\n\n"
+            . "Stato richiesta: {$status}\n"
+            . "Data visita: {$booking->visit_date}\n"
+            . "Fascia oraria: {$slot}\n"
+            . "Lingua visita: {$booking->language_name}\n"
+            . "Livello visita: {$booking->visit_level_label}\n"
+            . "Referente visita: {$staffName}\n"
+            . "Richiedente: {$booking->first_name} {$booking->last_name}\n"
+            . "Email: {$booking->email}\n"
+            . "Telefono: {$booking->phone}\n"
+            . "Visitatori: " . (int) $booking->visitors . "\n"
+            . "Ente/Scuola: {$booking->organization}\n"
+            . "Note: " . trim((string) $booking->notes) . "\n";
     }
 
 

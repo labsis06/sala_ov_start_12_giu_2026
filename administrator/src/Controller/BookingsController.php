@@ -95,6 +95,7 @@ if (empty($ids)) {
             $updated++;
 
             if ($withStaff) {
+              if ($withStaff) {
                 if (!empty($staff->email) && $this->sendStaffAssignmentEmail($id, $staff)) {
                     $emailsSent++;
                 }
@@ -265,6 +266,7 @@ if (empty($ids)) {
             . "Ente/Scuola: {$booking->organization}\n"
             . "Note: " . trim((string) $booking->notes) . "\n";
     }
+
 
 
     public function saveEdit(): void

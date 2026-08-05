@@ -149,41 +149,112 @@ if (!$visitLevel) {
         $this->setRedirect($redirect);
     }
 
-   private function sendNotice($booking)
-{
-    try {
-        $db = Factory::getContainer()->get('DatabaseDriver');
+    private function sendNotice($booking)
+    {
+        try {
+            $db = Factory::getContainer()->get('DatabaseDriver');
 
-        $db->setQuery(
-            'SELECT name, email FROM #__salaov_admin_recipients WHERE published = 1 AND email <> "" ORDER BY name ASC'
-        );
-        $recipients = $db->loadObjectList();
+            $db->setQuery(
+                'SELECT name, email FROM #__salaov_admin_recipients WHERE published = 1 AND email <> "" ORDER BY name ASC'
+            );
+            $recipients = $db->loadObjectList();
 
-        if (!$recipients) {
-            $config = Factory::getConfig();
-            $fallback = (string) $config->get('mailfrom');
+            if (!$recipients) {
+                $config = Factory::getConfig();
+                $fallback = (string) $config->get('mailfrom');
 
-            if (!$fallback) {
-                return;
+                if (!$fallback) {
+                    return;
+                }
+
+                $recipients = [(object) ['name' => 'Amministratore', 'email' => $fallback]];
             }
 
-            $recipients = [(object) ['name' => 'Amministratore', 'email' => $fallback]];
+            $mailer = Factory::getMailer();
+
+            foreach ($recipients as $recipient) {
+                $mailer->addRecipient($recipient->email, $recipient->name);
+            }
+
+            $mailer->setSubject(
+               $booking->status === 'approved'
+                ? 'Nuova prenotazione Sala OV approvata direttamente'
+                : 'Nuova prenotazione Sala OV in attesa'
+            );
+            $mailer->setBody(
+                "Nuova richiesta di prenotazione Sala OV.\n\n"
+                . "Stato richiesta: {$booking->status}\n"
+                . "Data visita: {$booking->visit_date}\n"
+                . "Lingua visita: {$booking->language_name}\n"
+                . "Livello visita: {$booking->visit_level_label}\n"
+                . "Richiedente: {$booking->first_name} {$booking->last_name}\n"
+                . "Email: {$booking->email}\n"
+                . "Telefono: {$booking->phone}\n"
+                . "Visitatori: {$booking->visitors}\n"
+                . "Ente/Scuola: {$booking->organization}\n"
+            );
+
+            $mailer->Send();
+        } catch (\Throwable $e) {
         }
+    }
 
-        $mailer = Factory::getMailer();
+    private function sendReferentNotice(object $booking, string $event): int
+    {
+        try {
+            $referents = $this->getVisitReferents($booking);
 
-        foreach ($recipients as $recipient) {
-            $mailer->addRecipient($recipient->email, $recipient->name);
+            if (!$referents) {
+                return 0;
+            }
+
+            $sent = 0;
+            foreach ($referents as $referent) {
+                if (empty($referent->email)) {
+                    continue;
+                }
+
+                $mailer = Factory::getMailer();
+                $mailer->addRecipient($referent->email, $referent->name);
+                $mailer->setSubject(
+                    $event === 'approved'
+                        ? 'Prenotazione Sala OV approvata - ' . $booking->visit_date
+                        : 'Nuova richiesta Sala OV - ' . $booking->visit_date
+                );
+                $mailer->setBody($this->buildBookingMailBody($booking, $event));
+
+                if ($mailer->Send() === true) {
+                    $sent++;
+                }
+            }
+
+            return $sent;
+        } catch (\Throwable $e) {
+            return 0;
         }
+    }
 
-        $mailer->setSubject(
-           $booking->status === 'approved'
-            ? 'Nuova prenotazione Sala OV approvata direttamente'
-            : 'Nuova prenotazione Sala OV in attesa'
-        );
-        $mailer->setBody(
-            "Nuova richiesta di prenotazione Sala OV.\n\n"
-            . "Stato richiesta: {$booking->status}\n"
+    private function getVisitReferents(object $booking): array
+    {
+        $db = Factory::getContainer()->get('DatabaseDriver');
+        $query = $db->getQuery(true)
+            ->select('DISTINCT s.name, s.email')
+            ->from($db->quoteName('#__salaov_day_staff', 'ds'))
+            ->join('INNER', $db->quoteName('#__salaov_staff', 's') . ' ON s.id = ds.staff_id')
+            ->where('ds.visit_date = ' . $db->quote($booking->visit_date))
+            ->where('s.published = 1')
+            ->where('s.email <> ' . $db->quote(''))
+            ->order('s.name ASC');
+        $db->setQuery($query);
+
+        return $db->loadObjectList() ?: [];
+    }
+
+    private function buildBookingMailBody(object $booking, string $event): string
+    {
+        $statusLabel = $event === 'approved' ? 'approvata' : 'in attesa di approvazione';
+
+        return "Prenotazione Sala OV {$statusLabel}.\n\n"
             . "Data visita: {$booking->visit_date}\n"
             . "Lingua visita: {$booking->language_name}\n"
             . "Livello visita: {$booking->visit_level_label}\n"
@@ -192,11 +263,9 @@ if (!$visitLevel) {
             . "Telefono: {$booking->phone}\n"
             . "Visitatori: {$booking->visitors}\n"
             . "Ente/Scuola: {$booking->organization}\n"
-        );
-
-        $mailer->Send();
-    } catch (\Throwable $e) {
+            . "Note: " . trim((string) $booking->notes) . "\n";
     }
+
 }
 
     private function sendReferentNotice(object $booking, string $event): int

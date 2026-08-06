@@ -95,7 +95,6 @@ if (empty($ids)) {
             $updated++;
 
             if ($withStaff) {
-              if ($withStaff) {
                 if (!empty($staff->email) && $this->sendStaffAssignmentEmail($id, $staff)) {
                     $emailsSent++;
                 }

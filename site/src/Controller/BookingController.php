@@ -6,6 +6,7 @@ namespace Ov\Component\Salaov\Site\Controller;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
+use Joomla\CMS\Uri\Uri;
 
 class BookingController extends BaseController
 {
@@ -178,6 +179,7 @@ if (!$visitLevel) {
                 ? 'Nuova prenotazione Sala OV approvata direttamente'
                 : 'Nuova prenotazione Sala OV in attesa'
             );
+            $adminBookingsUrl = Uri::root() . 'administrator/index.php?option=com_salaov&view=bookings';
             $mailer->setBody(
                 "Nuova richiesta di prenotazione Sala OV.\n\n"
                 . "Stato richiesta: {$booking->status}\n"
@@ -190,6 +192,7 @@ if (!$visitLevel) {
                 . "Telefono: {$booking->phone}\n"
                 . "Visitatori: {$booking->visitors}\n"
                 . "Ente/Scuola: {$booking->organization}\n"
+                . "\nGestisci le prenotazioni: {$adminBookingsUrl}\n"
             );
 
             $mailer->Send();

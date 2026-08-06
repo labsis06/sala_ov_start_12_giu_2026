@@ -167,6 +167,7 @@ if (empty($ids)) {
                 . "Telefono: " . $booking->phone . "\n"
                 . "Ente/Scuola: " . $booking->organization . "\n"
                 . "Numero visitatori: " . (int) $booking->visitors . "\n"
+                . "Lingua visita: " . $booking->language_name . "\n"
                 . "Note: " . trim((string) $booking->notes) . "\n\n"
                 . "Questa email e stata generata automaticamente dal sistema di prenotazione Sala OV.\n"
                 . $siteName . "\n";
@@ -229,7 +230,7 @@ if (empty($ids)) {
             . "Data visita: {$booking->visit_date}\n"
             . "Lingua visita: {$languageName}\n"
             . "Livello visita: {$visitLevelLabel}\n"
-            . "Referente visita: {$staffName}\n"
+            . "Personale OV assegnato alla visita: {$staffName}\n"
             . "Visitatori: " . (int) $booking->visitors . "\n"
             . "Ente/Scuola: {$booking->organization}\n"
             . "Note: " . trim((string) $booking->notes) . "\n\n"

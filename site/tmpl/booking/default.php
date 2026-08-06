@@ -27,10 +27,10 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
     <div class="alert alert-warning salaov-alert mb-4">Per inviare una richiesta di prenotazione devi accedere con un utente Joomla registrato.</div>
   <?php endif; ?>
 
-  <?php echo salaovRenderAvailabilityCalendar($this->slots ?? [], $this->availability ?? [], ['months' => 6, 'selectable' => true, 'inputSelector' => '#salaov_visit_date', 'dayRules' => $this->dayRules ?? [], 'daySlots' => $this->daySlots ?? []]); ?>
+  <?php echo salaovRenderAvailabilityCalendar($this->slots ?? [], $this->availability ?? [], ['months' => 6, 'selectable' => true, 'inputSelector' => '#salaov_visit_date', 'scrollSelector' => '#salaov_booking_form', 'dayRules' => $this->dayRules ?? [], 'daySlots' => $this->daySlots ?? []]); ?>
 
   <?php if (!$user->guest): ?>
-    <section class="salaov-form-card">
+    <section id="salaov_booking_form" class="salaov-form-card">
       <h2>Richiesta di prenotazione</h2>
       <form method="post" action="<?php echo Route::_('index.php?option=com_salaov&task=booking.submit'); ?>" class="needs-validation" novalidate>
         <div class="row g-4">

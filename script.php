@@ -53,6 +53,39 @@ class Com_SalaovInstallerScript
         $this->addColumn($db, '#__salaov_bookings', 'staff_name', "varchar(190) NULL AFTER `staff_id`");
         $this->addColumn($db, '#__salaov_staff', 'spoken_language', "varchar(190) NULL AFTER `phone`");
        $db->setQuery("INSERT IGNORE INTO `#__salaov_staff` (`id`,`name`,`email`,`phone`,`spoken_language`,`published`) VALUES (1,'Personale OV','','','Italiano',1)")->execute();
+       $this->updateHomeMenuLink($db);
+    }
+
+    private function updateHomeMenuLink($db): void
+    {
+        try {
+            $db->setQuery(
+                $db->getQuery(true)
+                    ->select($db->quoteName('extension_id'))
+                    ->from($db->quoteName('#__extensions'))
+                    ->where($db->quoteName('element') . ' = ' . $db->quote('com_salaov'))
+                    ->where($db->quoteName('type') . ' = ' . $db->quote('component'))
+            );
+            $componentId = (int) $db->loadResult();
+
+            if (!$componentId) {
+                return;
+            }
+
+            $query = $db->getQuery(true)
+                ->update($db->quoteName('#__menu'))
+                ->set($db->quoteName('link') . ' = ' . $db->quote('index.php?option=com_salaov&view=booking'))
+                ->set($db->quoteName('type') . ' = ' . $db->quote('component'))
+                ->set($db->quoteName('component_id') . ' = ' . (int) $componentId)
+                ->where($db->quoteName('client_id') . ' = 0')
+                ->where($db->quoteName('home') . ' = 1')
+                ->where('(' . implode(' OR ', [
+                    $db->quoteName('link') . ' = ' . $db->quote('index.php?view=calendar'),
+                    $db->quoteName('link') . ' = ' . $db->quote('index.php?option=com_salaov&view=calendar'),
+                    $db->quoteName('link') . ' LIKE ' . $db->quote('%view=calendar%'),
+                ]) . ')');
+            $db->setQuery($query)->execute();
+        } catch (Throwable $e) {}
     }
 
     private function addColumn($db, string $table, string $column, string $definition): void

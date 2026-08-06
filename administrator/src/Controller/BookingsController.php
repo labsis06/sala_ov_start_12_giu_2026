@@ -95,12 +95,12 @@ if (empty($ids)) {
             $updated++;
 
             if ($withStaff) {
-              if ($withStaff) {
                 if (!empty($staff->email) && $this->sendStaffAssignmentEmail($id, $staff)) {
                     $emailsSent++;
                 }
 
                 $adminEmailsSent += $this->sendAdminStatusEmail($id, $status, $staff);
+                $this->sendRequesterStatusEmail($id, $status, $staff);
             }
         }
 
@@ -132,9 +132,13 @@ if (empty($ids)) {
                     's.title AS slot_title',
                     's.start_time',
                     's.end_time',
+                    'COALESCE(NULLIF(b.language_name, ' . $db->quote('') . '), l.title, ' . $db->quote('-') . ') AS email_language_name',
+                    'COALESCE(NULLIF(b.visit_level_label, ' . $db->quote('') . '), vl.title, ' . $db->quote('-') . ') AS email_visit_level_label',
                 ])
                 ->from($db->quoteName('#__salaov_bookings', 'b'))
                 ->join('LEFT', $db->quoteName('#__salaov_slots', 's') . ' ON s.id = b.slot_id')
+                ->join('LEFT', $db->quoteName('#__salaov_languages', 'l') . ' ON l.id = b.language_id')
+                ->join('LEFT', $db->quoteName('#__salaov_visit_levels', 'vl') . ' ON vl.id = b.visit_level_id')
                 ->where('b.id = ' . (int) $bookingId);
             $db->setQuery($query);
             $booking = $db->loadObject();
@@ -144,18 +148,20 @@ if (empty($ids)) {
             }
 
             $config = Factory::getApplication()->getConfig();
-            $fromEmail = (string) $config->get('mailfrom');
-            $fromName  = (string) $config->get('fromname');
             $siteName  = (string) $config->get('sitename');
 
             $subject = 'Assegnazione visita Sala OV - ' . $booking->visit_date;
             $slot = trim(($booking->slot_title ?: 'Fascia oraria') . ' ' . substr((string) $booking->start_time, 0, 5) . '-' . substr((string) $booking->end_time, 0, 5));
+            $languageName = $booking->email_language_name ?? $booking->language_name ?? '-';
+            $visitLevelLabel = $booking->email_visit_level_label ?? $booking->visit_level_label ?? '-';
 
             $body = "Gentile " . $staff->name . ",\n\n"
                 . "ti e stata assegnata la gestione di una visita alla Sala di Monitoraggio dell'Osservatorio Vesuviano.\n\n"
                 . "Riepilogo prenotazione:\n"
                 . "Data visita: " . $booking->visit_date . "\n"
                 . "Fascia oraria: " . $slot . "\n"
+                . "Lingua visita: " . $languageName . "\n"
+                . "Livello visita: " . $visitLevelLabel . "\n"
                 . "Richiedente: " . $booking->first_name . " " . $booking->last_name . "\n"
                 . "Email richiedente: " . $booking->email . "\n"
                 . "Telefono: " . $booking->phone . "\n"
@@ -166,7 +172,7 @@ if (empty($ids)) {
                 . $siteName . "\n";
 
             $mailer = Factory::getMailer();
-            $mailer->setSender([$fromEmail, $fromName]);
+            $this->setMailerSender($mailer);
             $mailer->addRecipient($staff->email, $staff->name);
             $mailer->setSubject($subject);
             $mailer->setBody($body);
@@ -176,6 +182,58 @@ if (empty($ids)) {
             Factory::getApplication()->enqueueMessage('Errore invio email al personale: ' . $e->getMessage(), 'warning');
             return false;
         }
+    }
+
+    private function sendRequesterStatusEmail(int $bookingId, string $status, ?object $staff = null): bool
+    {
+        try {
+            $booking = $this->getBookingForEmail($bookingId);
+
+            if (!$booking || empty($booking->email)) {
+                return false;
+            }
+
+            $mailer = Factory::getMailer();
+            $this->setMailerSender($mailer);
+            $mailer->addRecipient($booking->email, trim($booking->first_name . ' ' . $booking->last_name));
+            $mailer->setSubject('Prenotazione Sala OV approvata - ' . $booking->visit_date);
+            $mailer->setBody($this->buildRequesterStatusEmailBody($booking, $status, $staff));
+
+            return $mailer->Send() === true;
+        } catch (\Throwable $e) {
+            Factory::getApplication()->enqueueMessage('Errore invio email al referente della visita: ' . $e->getMessage(), 'warning');
+            return false;
+        }
+    }
+
+    private function setMailerSender($mailer): void
+    {
+        $config = Factory::getApplication()->getConfig();
+        $fromEmail = (string) $config->get('mailfrom');
+        $fromName = (string) $config->get('fromname');
+
+        if ($fromEmail) {
+            $mailer->setSender([$fromEmail, $fromName]);
+        }
+    }
+
+    private function buildRequesterStatusEmailBody(object $booking, string $status, ?object $staff = null): string
+    {
+        $staffName = $staff->name ?? $booking->staff_name ?? '';
+        $languageName = $booking->email_language_name ?? $booking->language_name ?? '-';
+        $visitLevelLabel = $booking->email_visit_level_label ?? $booking->visit_level_label ?? '-';
+
+        return "Gentile {$booking->first_name} {$booking->last_name},\n\n"
+            . "La tua prenotazione alla Sala OV e stata approvata.\n\n"
+            . "Riepilogo prenotazione:\n"
+            . "Data visita: {$booking->visit_date}\n"
+            . "Lingua visita: {$languageName}\n"
+            . "Livello visita: {$visitLevelLabel}\n"
+            . "Referente visita: {$staffName}\n"
+            . "Visitatori: " . (int) $booking->visitors . "\n"
+            . "Ente/Scuola: {$booking->organization}\n"
+            . "Note: " . trim((string) $booking->notes) . "\n\n"
+            . "Questa email e stata generata automaticamente dal sistema di prenotazione Sala OV.\n";
     }
 
 
@@ -196,6 +254,7 @@ if (empty($ids)) {
                 }
 
                 $mailer = Factory::getMailer();
+                $this->setMailerSender($mailer);
                 $mailer->addRecipient($recipient->email, $recipient->name);
                 $mailer->setSubject('Prenotazione Sala OV approvata - ' . $booking->visit_date);
                 $mailer->setBody($this->buildBookingEmailBody($booking, $status, $staff));
@@ -237,9 +296,13 @@ if (empty($ids)) {
                 's.title AS slot_title',
                 's.start_time',
                 's.end_time',
+                'COALESCE(NULLIF(b.language_name, ' . $db->quote('') . '), l.title, ' . $db->quote('-') . ') AS email_language_name',
+                'COALESCE(NULLIF(b.visit_level_label, ' . $db->quote('') . '), vl.title, ' . $db->quote('-') . ') AS email_visit_level_label',
             ])
             ->from($db->quoteName('#__salaov_bookings', 'b'))
             ->join('LEFT', $db->quoteName('#__salaov_slots', 's') . ' ON s.id = b.slot_id')
+            ->join('LEFT', $db->quoteName('#__salaov_languages', 'l') . ' ON l.id = b.language_id')
+            ->join('LEFT', $db->quoteName('#__salaov_visit_levels', 'vl') . ' ON vl.id = b.visit_level_id')
             ->where('b.id = ' . (int) $bookingId);
         $db->setQuery($query);
         $booking = $db->loadObject();
@@ -251,13 +314,15 @@ if (empty($ids)) {
     {
         $slot = trim(($booking->slot_title ?: 'Fascia oraria') . ' ' . substr((string) $booking->start_time, 0, 5) . '-' . substr((string) $booking->end_time, 0, 5));
         $staffName = $staff->name ?? $booking->staff_name ?? '';
+        $languageName = $booking->email_language_name ?? $booking->language_name ?? '-';
+        $visitLevelLabel = $booking->email_visit_level_label ?? $booking->visit_level_label ?? '-';
 
         return "Prenotazione Sala OV aggiornata.\n\n"
             . "Stato richiesta: {$status}\n"
             . "Data visita: {$booking->visit_date}\n"
             . "Fascia oraria: {$slot}\n"
-            . "Lingua visita: {$booking->language_name}\n"
-            . "Livello visita: {$booking->visit_level_label}\n"
+            . "Lingua visita: {$languageName}\n"
+            . "Livello visita: {$visitLevelLabel}\n"
             . "Referente visita: {$staffName}\n"
             . "Richiedente: {$booking->first_name} {$booking->last_name}\n"
             . "Email: {$booking->email}\n"

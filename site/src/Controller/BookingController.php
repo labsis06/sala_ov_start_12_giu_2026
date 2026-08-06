@@ -140,6 +140,7 @@ if (!$visitLevel) {
         $booking->id = (int) $db->insertid();
         $this->sendNotice($booking);
         $this->sendReferentNotice($booking, $approveNow ? 'approved' : 'pending');
+        $this->sendRequesterNotice($booking, $approveNow ? 'approved' : 'pending');
 
         if ($approveNow) {
           $app->enqueueMessage('Richiesta inviata e approvata direttamente.');
@@ -171,6 +172,7 @@ if (!$visitLevel) {
             }
 
             $mailer = Factory::getMailer();
+            $this->setMailerSender($mailer);
 
             foreach ($recipients as $recipient) {
                 $mailer->addRecipient($recipient->email, $recipient->name);
@@ -199,6 +201,58 @@ if (!$visitLevel) {
         }
     }
 
+    private function sendRequesterNotice(object $booking, string $event): bool
+    {
+        try {
+            if (empty($booking->email)) {
+                return false;
+            }
+
+            $mailer = Factory::getMailer();
+            $this->setMailerSender($mailer);
+            $mailer->addRecipient($booking->email, trim($booking->first_name . ' ' . $booking->last_name));
+            $mailer->setSubject(
+                $event === 'approved'
+                    ? 'Prenotazione Sala OV approvata - ' . $booking->visit_date
+                    : 'Richiesta prenotazione Sala OV ricevuta - ' . $booking->visit_date
+            );
+            $mailer->setBody($this->buildRequesterMailBody($booking, $event));
+
+            return $mailer->Send() === true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    private function setMailerSender($mailer): void
+    {
+        $config = Factory::getApplication()->getConfig();
+        $fromEmail = (string) $config->get('mailfrom');
+        $fromName = (string) $config->get('fromname');
+
+        if ($fromEmail) {
+            $mailer->setSender([$fromEmail, $fromName]);
+        }
+    }
+
+    private function buildRequesterMailBody(object $booking, string $event): string
+    {
+        $statusLabel = $event === 'approved'
+            ? 'La tua prenotazione e stata approvata.'
+            : 'La tua richiesta e stata ricevuta ed e in attesa di approvazione.';
+
+        return "Gentile {$booking->first_name} {$booking->last_name},\n\n"
+            . $statusLabel . "\n\n"
+            . "Riepilogo richiesta:\n"
+            . "Data visita: {$booking->visit_date}\n"
+            . "Lingua visita: {$booking->language_name}\n"
+            . "Livello visita: {$booking->visit_level_label}\n"
+            . "Visitatori: {$booking->visitors}\n"
+            . "Ente/Scuola: {$booking->organization}\n"
+            . "Note: " . trim((string) $booking->notes) . "\n\n"
+            . "Questa email e stata generata automaticamente dal sistema di prenotazione Sala OV.\n";
+    }
+
     private function sendReferentNotice(object $booking, string $event): int
     {
         try {
@@ -215,6 +269,7 @@ if (!$visitLevel) {
                 }
 
                 $mailer = Factory::getMailer();
+                $this->setMailerSender($mailer);
                 $mailer->addRecipient($referent->email, $referent->name);
                 $mailer->setSubject(
                     $event === 'approved'

@@ -18,11 +18,6 @@ class BookingController extends BaseController
         $return = $app->input->getBase64('return');
         $redirect = $return ? base64_decode($return) : Route::_('index.php?option=com_salaov&view=booking', false);
 
-        if ($user->guest) {
-            $app->enqueueMessage('Devi effettuare il login per prenotare.', 'warning');
-            $this->setRedirect($redirect);
-            return;
-        }
 
         $db = Factory::getContainer()->get('DatabaseDriver');
         $date = $app->input->getString('visit_date');
@@ -81,7 +76,7 @@ class BookingController extends BaseController
         }
 
         $booking = (object) [
-            'user_id' => (int) $user->id,
+            'user_id' => $user->guest ? 0 : (int) $user->id,
             'slot_id' => $slot,
             'day_slot_id' => $daySlotId ?: null,
             'visit_date' => $date,

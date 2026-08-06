@@ -132,9 +132,13 @@ if (empty($ids)) {
                     's.title AS slot_title',
                     's.start_time',
                     's.end_time',
+                    'COALESCE(NULLIF(b.language_name, ' . $db->quote('') . '), l.title, ' . $db->quote('-') . ') AS email_language_name',
+                    'COALESCE(NULLIF(b.visit_level_label, ' . $db->quote('') . '), vl.title, ' . $db->quote('-') . ') AS email_visit_level_label',
                 ])
                 ->from($db->quoteName('#__salaov_bookings', 'b'))
                 ->join('LEFT', $db->quoteName('#__salaov_slots', 's') . ' ON s.id = b.slot_id')
+                ->join('LEFT', $db->quoteName('#__salaov_languages', 'l') . ' ON l.id = b.language_id')
+                ->join('LEFT', $db->quoteName('#__salaov_visit_levels', 'vl') . ' ON vl.id = b.visit_level_id')
                 ->where('b.id = ' . (int) $bookingId);
             $db->setQuery($query);
             $booking = $db->loadObject();
@@ -148,12 +152,16 @@ if (empty($ids)) {
 
             $subject = 'Assegnazione visita Sala OV - ' . $booking->visit_date;
             $slot = trim(($booking->slot_title ?: 'Fascia oraria') . ' ' . substr((string) $booking->start_time, 0, 5) . '-' . substr((string) $booking->end_time, 0, 5));
+            $languageName = $booking->email_language_name ?? $booking->language_name ?? '-';
+            $visitLevelLabel = $booking->email_visit_level_label ?? $booking->visit_level_label ?? '-';
 
             $body = "Gentile " . $staff->name . ",\n\n"
                 . "ti e stata assegnata la gestione di una visita alla Sala di Monitoraggio dell'Osservatorio Vesuviano.\n\n"
                 . "Riepilogo prenotazione:\n"
                 . "Data visita: " . $booking->visit_date . "\n"
                 . "Fascia oraria: " . $slot . "\n"
+                . "Lingua visita: " . $languageName . "\n"
+                . "Livello visita: " . $visitLevelLabel . "\n"
                 . "Richiedente: " . $booking->first_name . " " . $booking->last_name . "\n"
                 . "Email richiedente: " . $booking->email . "\n"
                 . "Telefono: " . $booking->phone . "\n"
@@ -213,13 +221,15 @@ if (empty($ids)) {
     private function buildRequesterStatusEmailBody(object $booking, string $status, ?object $staff = null): string
     {
         $staffName = $staff->name ?? $booking->staff_name ?? '';
+        $languageName = $booking->email_language_name ?? $booking->language_name ?? '-';
+        $visitLevelLabel = $booking->email_visit_level_label ?? $booking->visit_level_label ?? '-';
 
         return "Gentile {$booking->first_name} {$booking->last_name},\n\n"
             . "La tua prenotazione alla Sala OV e stata approvata.\n\n"
             . "Riepilogo prenotazione:\n"
             . "Data visita: {$booking->visit_date}\n"
-            . "Lingua visita: {$booking->language_name}\n"
-            . "Livello visita: {$booking->visit_level_label}\n"
+            . "Lingua visita: {$languageName}\n"
+            . "Livello visita: {$visitLevelLabel}\n"
             . "Referente visita: {$staffName}\n"
             . "Visitatori: " . (int) $booking->visitors . "\n"
             . "Ente/Scuola: {$booking->organization}\n"
@@ -287,9 +297,13 @@ if (empty($ids)) {
                 's.title AS slot_title',
                 's.start_time',
                 's.end_time',
+                'COALESCE(NULLIF(b.language_name, ' . $db->quote('') . '), l.title, ' . $db->quote('-') . ') AS email_language_name',
+                'COALESCE(NULLIF(b.visit_level_label, ' . $db->quote('') . '), vl.title, ' . $db->quote('-') . ') AS email_visit_level_label',
             ])
             ->from($db->quoteName('#__salaov_bookings', 'b'))
             ->join('LEFT', $db->quoteName('#__salaov_slots', 's') . ' ON s.id = b.slot_id')
+            ->join('LEFT', $db->quoteName('#__salaov_languages', 'l') . ' ON l.id = b.language_id')
+            ->join('LEFT', $db->quoteName('#__salaov_visit_levels', 'vl') . ' ON vl.id = b.visit_level_id')
             ->where('b.id = ' . (int) $bookingId);
         $db->setQuery($query);
         $booking = $db->loadObject();
@@ -301,13 +315,15 @@ if (empty($ids)) {
     {
         $slot = trim(($booking->slot_title ?: 'Fascia oraria') . ' ' . substr((string) $booking->start_time, 0, 5) . '-' . substr((string) $booking->end_time, 0, 5));
         $staffName = $staff->name ?? $booking->staff_name ?? '';
+        $languageName = $booking->email_language_name ?? $booking->language_name ?? '-';
+        $visitLevelLabel = $booking->email_visit_level_label ?? $booking->visit_level_label ?? '-';
 
         return "Prenotazione Sala OV aggiornata.\n\n"
             . "Stato richiesta: {$status}\n"
             . "Data visita: {$booking->visit_date}\n"
             . "Fascia oraria: {$slot}\n"
-            . "Lingua visita: {$booking->language_name}\n"
-            . "Livello visita: {$booking->visit_level_label}\n"
+            . "Lingua visita: {$languageName}\n"
+            . "Livello visita: {$visitLevelLabel}\n"
             . "Referente visita: {$staffName}\n"
             . "Richiedente: {$booking->first_name} {$booking->last_name}\n"
             . "Email: {$booking->email}\n"

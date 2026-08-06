@@ -16,6 +16,7 @@ $canApproveDirectly = $user && !$user->guest && (
 );
 $days = [1 => 'Lunedi', 2 => 'Martedi', 3 => 'Mercoledi', 4 => 'Giovedi', 5 => 'Venerdi', 6 => 'Sabato', 7 => 'Domenica'];
 $returnUrl = base64_encode(Uri::getInstance()->toString());
+$loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUrl);
 ?>
 <div class="salaov">
   <header class="salaov-page-header">
@@ -24,13 +25,17 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
   </header>
 
   <?php if ($user->guest): ?>
-    <div class="alert alert-warning salaov-alert mb-4">Per inviare una richiesta di prenotazione devi accedere con un utente Joomla registrato.</div>
+    <div class="alert alert-info salaov-alert mb-4">
+      <strong>Non serve registrarsi per inviare una richiesta.</strong>
+      Compila il modulo qui sotto: la prenotazione verrà salvata in attesa di approvazione.
+      Se sei un amministratore, <a href="<?php echo $loginUrl; ?>" class="alert-link">effettua il login</a>
+      per sbloccare le funzionalità riservate, come l'abilitazione dei menu e l'inserimento con approvazione diretta della richiesta.
+    </div>
   <?php endif; ?>
 
   <?php echo salaovRenderAvailabilityCalendar($this->slots ?? [], $this->availability ?? [], ['months' => 6, 'selectable' => true, 'inputSelector' => '#salaov_visit_date', 'scrollSelector' => '#salaov_booking_form', 'dayRules' => $this->dayRules ?? [], 'daySlots' => $this->daySlots ?? []]); ?>
 
-  <?php if (!$user->guest): ?>
-    <section id="salaov_booking_form" class="salaov-form-card">
+  <section id="salaov_booking_form" class="salaov-form-card">
       <h2>Richiesta di prenotazione</h2>
       <form method="post" action="<?php echo Route::_('index.php?option=com_salaov&task=booking.submit'); ?>" class="needs-validation" novalidate>
         <div class="row g-4">
@@ -44,7 +49,7 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
           <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Referente</h3></div>
           <div class="col-md-6"><label class="form-label">Nome</label><input class="form-control" name="first_name" required></div>
           <div class="col-md-6"><label class="form-label">Cognome</label><input class="form-control" name="last_name" required></div>
-          <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="<?php echo htmlspecialchars($user->email, ENT_QUOTES, 'UTF-8'); ?>" required></div>
+          <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="<?php echo htmlspecialchars($user->guest ? '' : $user->email, ENT_QUOTES, 'UTF-8'); ?>" required></div>
           <div class="col-md-6"><label class="form-label">Telefono</label><input class="form-control" name="phone" required></div>
 
           <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Gruppo visita</h3></div>
@@ -118,8 +123,7 @@ $returnUrl = base64_encode(Uri::getInstance()->toString());
         <?php echo HTMLHelper::_('form.token'); ?>
         <div class="d-flex justify-content-end mt-4"><button type="submit" class="btn btn-primary btn-lg">Invia richiesta</button></div>
       </form>
-    </section>
-  <?php endif; ?>
+  </section>
 </div>
 <script>
 (function(){

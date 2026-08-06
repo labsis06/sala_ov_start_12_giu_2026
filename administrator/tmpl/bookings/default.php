@@ -207,6 +207,20 @@ $days = [
         </div>
     </div>
 
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <button type="button" class="btn btn-primary" onclick="Joomla.submitbutton('bookings.approve');">
+            Approva
+        </button>
+
+        <button type="button" class="btn btn-warning" onclick="Joomla.submitbutton('bookings.reject');">
+            Rifiuta
+        </button>
+
+        <button type="button" class="btn btn-danger" onclick="Joomla.submitbutton('bookings.cancel');">
+            Annulla
+        </button>
+    </div>
+
     <table class="table table-striped table-hover align-middle">
         <thead>
             <tr>

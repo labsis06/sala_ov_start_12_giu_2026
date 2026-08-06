@@ -6,6 +6,7 @@ namespace Ov\Component\Salaov\Site\Controller;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
+use Joomla\CMS\Uri\Uri;
 
 class BookingController extends BaseController
 {
@@ -18,11 +19,6 @@ class BookingController extends BaseController
         $return = $app->input->getBase64('return');
         $redirect = $return ? base64_decode($return) : Route::_('index.php?option=com_salaov&view=booking', false);
 
-        if ($user->guest) {
-            $app->enqueueMessage('Devi effettuare il login per prenotare.', 'warning');
-            $this->setRedirect($redirect);
-            return;
-        }
 
         $db = Factory::getContainer()->get('DatabaseDriver');
         $date = $app->input->getString('visit_date');
@@ -117,7 +113,7 @@ if (!$visitLevel) {
 
 
         $booking = (object) [
-            'user_id' => (int) $user->id,
+            'user_id' => $user->guest ? 0 : (int) $user->id,
             'slot_id' => $slot,
             'day_slot_id' => $daySlotId ?: null,
             'visit_date' => $date,
@@ -183,6 +179,7 @@ if (!$visitLevel) {
                 ? 'Nuova prenotazione Sala OV approvata direttamente'
                 : 'Nuova prenotazione Sala OV in attesa'
             );
+            $adminBookingsUrl = Uri::root() . 'administrator/index.php?option=com_salaov&view=bookings';
             $mailer->setBody(
                 "Nuova richiesta di prenotazione Sala OV.\n\n"
                 . "Stato richiesta: {$booking->status}\n"
@@ -195,6 +192,7 @@ if (!$visitLevel) {
                 . "Telefono: {$booking->phone}\n"
                 . "Visitatori: {$booking->visitors}\n"
                 . "Ente/Scuola: {$booking->organization}\n"
+                . "\nGestisci le prenotazioni: {$adminBookingsUrl}\n"
             );
 
             $mailer->Send();

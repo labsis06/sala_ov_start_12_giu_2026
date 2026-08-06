@@ -167,6 +167,7 @@ if (empty($ids)) {
                 . "Telefono: " . $booking->phone . "\n"
                 . "Ente/Scuola: " . $booking->organization . "\n"
                 . "Numero visitatori: " . (int) $booking->visitors . "\n"
+                . "Lingua visita: " . $booking->language_name . "\n"
                 . "Note: " . trim((string) $booking->notes) . "\n\n"
                 . "Questa email e stata generata automaticamente dal sistema di prenotazione Sala OV.\n"
                 . $siteName . "\n";

@@ -66,6 +66,7 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
         $dayRules = $options['dayRules'] ?? [];
         $selectable = !empty($options['selectable']);
         $inputSelector = $options['inputSelector'] ?? '#salaov_visit_date';
+        $scrollSelector = $options['scrollSelector'] ?? '';
         $daySlots = $options['daySlots'] ?? [];
         $days = salaovBuildDayStatus($slots, $availability, $dayRules, $months, $daySlots);
         $monthNames = [1=>'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -309,7 +310,7 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
             var months=[].slice.call(root.querySelectorAll('.salaov-month')); var i=0; var title=root.querySelector('.salaov-current-month');
             function show(n){ i=Math.max(0,Math.min(months.length-1,n)); months.forEach(function(m,k){m.hidden=k!==i;}); title.textContent=months[i]?months[i].dataset.title:''; root.querySelector('.salaov-prev').disabled=i===0; root.querySelector('.salaov-next').disabled=i===months.length-1; }
             root.querySelector('.salaov-prev').addEventListener('click',function(){show(i-1);}); root.querySelector('.salaov-next').addEventListener('click',function(){show(i+1);}); show(0);
-            <?php if ($selectable): ?>root.addEventListener('click',function(e){ var day=e.target.closest('.salaov-day:not(:disabled)'); if(!day) return; var input=document.querySelector('<?php echo addslashes($inputSelector); ?>'); if(input){ input.value=day.dataset.date; input.dispatchEvent(new Event('change')); } root.querySelectorAll('.salaov-day-selected').forEach(function(el){el.classList.remove('salaov-day-selected')}); day.classList.add('salaov-day-selected'); });<?php endif; ?>
+            <?php if ($selectable): ?>root.addEventListener('click',function(e){ var day=e.target.closest('.salaov-day:not(:disabled)'); if(!day) return; var input=document.querySelector(<?php echo json_encode($inputSelector); ?>); if(input){ input.value=day.dataset.date; input.dispatchEvent(new Event('change')); } root.querySelectorAll('.salaov-day-selected').forEach(function(el){el.classList.remove('salaov-day-selected')}); day.classList.add('salaov-day-selected'); var scrollTarget=document.querySelector(<?php echo json_encode($scrollSelector); ?>); if(scrollTarget){ window.requestAnimationFrame(function(){ scrollTarget.scrollIntoView({behavior:'smooth',block:'start'}); }); } });<?php endif; ?>
         })();
         </script>
         <?php return ob_get_clean();

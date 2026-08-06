@@ -189,6 +189,7 @@ if (!$visitLevel) {
                 . "Data visita: {$booking->visit_date}\n"
                 . "Lingua visita: {$booking->language_name}\n"
                 . "Livello visita: {$booking->visit_level_label}\n"
+                . "Personale OV assegnato alla visita: " . ($booking->staff_name ?? '-') . "\n"
                 . "Richiedente: {$booking->first_name} {$booking->last_name}\n"
                 . "Email: {$booking->email}\n"
                 . "Telefono: {$booking->phone}\n"

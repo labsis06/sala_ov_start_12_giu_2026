@@ -192,8 +192,8 @@ $days = [
                 <strong>Personale che gestirà la visita in caso di approvazione</strong>
             </label>
 
-            <select name="staff_id" class="form-select" style="max-width:420px" required>
-                <option value="">Seleziona personale...</option>
+            <select name="staff_id" class="form-select" style="max-width:420px">
+                <option value="">Mantieni il personale già assegnato</option>
                 <?php foreach (($this->staff ?? []) as $s): ?>
                     <option value="<?php echo (int) $s->id; ?>">
                         <?php echo htmlspecialchars($s->name . (!empty($s->spoken_language) ? ' - ' . $s->spoken_language : ''), ENT_QUOTES, 'UTF-8'); ?>
@@ -202,7 +202,7 @@ $days = [
             </select>
 
             <small class="form-text text-muted">
-                Seleziona una o più prenotazioni e premi Approva.
+                Per le visite già assegnate puoi approvare senza selezionare nuovamente il personale.
             </small>
         </div>
     </div>

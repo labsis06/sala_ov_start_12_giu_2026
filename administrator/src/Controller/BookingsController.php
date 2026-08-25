@@ -46,11 +46,6 @@ if (empty($ids)) {
 }
 
 
-        if ($withStaff && !$staffId) {
-            $this->setRedirect('index.php?option=com_salaov&view=bookings', 'Seleziona il personale che accompagnera la visita prima di approvare.', 'warning');
-            return;
-        }
-
         $staff = null;
         if ($withStaff && $staffId) {
             $query = $db->getQuery(true)
@@ -70,12 +65,30 @@ if (empty($ids)) {
         $updated = 0;
         $emailsSent = 0;
         $adminEmailsSent = 0;
+        $requesterEmailsSent = 0;
 
+        $bookings = [];
         foreach ($ids as $id) {
-            $id = (int) $id;
-            if (!$id) {
+            $booking = $this->getBookingForEmail((int) $id);
+            if (!$booking) {
                 continue;
             }
+
+            $bookingStaff = $staff ?: $this->getBookingStaff($booking);
+            if ($withStaff && !$bookingStaff) {
+                $this->setRedirect(
+                    'index.php?option=com_salaov&view=bookings',
+                    'Seleziona il personale per le prenotazioni che non hanno ancora un assegnatario.',
+                    'warning'
+                );
+                return;
+            }
+
+            $bookings[] = [$booking, $bookingStaff];
+        }
+
+        foreach ($bookings as [$booking, $bookingStaff]) {
+            $id = (int) $booking->id;
 
             $sets = [
                 $db->quoteName('status') . ' = ' . $db->quote($status),
@@ -83,8 +96,8 @@ if (empty($ids)) {
             ];
 
             if ($withStaff) {
-                $sets[] = $db->quoteName('staff_id') . ' = ' . (int) $staff->id;
-                $sets[] = $db->quoteName('staff_name') . ' = ' . $db->quote($staff->name);
+                $sets[] = $db->quoteName('staff_id') . ' = ' . (int) $bookingStaff->id;
+                $sets[] = $db->quoteName('staff_name') . ' = ' . $db->quote($bookingStaff->name);
             }
 
             $query = $db->getQuery(true)
@@ -95,12 +108,20 @@ if (empty($ids)) {
             $updated++;
 
             if ($withStaff) {
-                if (!empty($staff->email) && $this->sendStaffAssignmentEmail($id, $staff)) {
+                if (!empty($bookingStaff->email) && $this->sendStaffAssignmentEmail($id, $bookingStaff)) {
                     $emailsSent++;
                 }
+            } elseif ($status === 'rejected' && $bookingStaff && !empty($bookingStaff->email)) {
+                if ($this->sendStaffStatusEmail($id, $status, $bookingStaff)) {
+                    $emailsSent++;
+                }
+            }
 
-                $adminEmailsSent += $this->sendAdminStatusEmail($id, $status, $staff);
-                $this->sendRequesterStatusEmail($id, $status, $staff);
+            if ($withStaff || $status === 'rejected') {
+                $adminEmailsSent += $this->sendAdminStatusEmail($id, $status, $bookingStaff);
+                if ($this->sendRequesterStatusEmail($id, $status, $bookingStaff)) {
+                    $requesterEmailsSent++;
+                }
             }
         }
 
@@ -116,10 +137,50 @@ if (empty($ids)) {
                 $message .= ' Email inviata agli amministratori: ' . $adminEmailsSent . '.';
             }
         } else {
-            $message = 'Stato aggiornato.';
+            $message = $status === 'rejected'
+                ? 'Prenotazione rifiutata. Email inviate: richiedenti ' . $requesterEmailsSent
+                    . ', amministratori ' . $adminEmailsSent . ', personale assegnato ' . $emailsSent . '.'
+                : 'Stato aggiornato.';
         }
 
         $this->setRedirect('index.php?option=com_salaov&view=bookings', $message);
+    }
+
+    private function getBookingStaff(object $booking): ?object
+    {
+        if (empty($booking->staff_id)) {
+            return null;
+        }
+
+        $db = Factory::getContainer()->get('DatabaseDriver');
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->from($db->quoteName('#__salaov_staff'))
+            ->where($db->quoteName('id') . ' = ' . (int) $booking->staff_id);
+        $db->setQuery($query);
+
+        return $db->loadObject() ?: null;
+    }
+
+    private function sendStaffStatusEmail(int $bookingId, string $status, object $staff): bool
+    {
+        try {
+            $booking = $this->getBookingForEmail($bookingId);
+            if (!$booking || empty($staff->email)) {
+                return false;
+            }
+
+            $mailer = Factory::getMailer();
+            $this->setMailerSender($mailer);
+            $mailer->addRecipient($staff->email, $staff->name);
+            $mailer->setSubject($this->getStatusEmailSubject($booking, $status));
+            $mailer->setBody("Gentile {$staff->name},\n\n" . $this->buildBookingEmailBody($booking, $status, $staff));
+
+            return $mailer->Send() === true;
+        } catch (\Throwable $e) {
+            Factory::getApplication()->enqueueMessage('Errore invio email al personale: ' . $e->getMessage(), 'warning');
+            return false;
+        }
     }
 
     private function sendStaffAssignmentEmail(int $bookingId, object $staff): bool
@@ -197,7 +258,7 @@ if (empty($ids)) {
             $mailer = Factory::getMailer();
             $this->setMailerSender($mailer);
             $mailer->addRecipient($booking->email, trim($booking->first_name . ' ' . $booking->last_name));
-            $mailer->setSubject('Prenotazione Sala OV approvata - ' . $booking->visit_date);
+            $mailer->setSubject($this->getStatusEmailSubject($booking, $status));
             $mailer->setBody($this->buildRequesterStatusEmailBody($booking, $status, $staff));
 
             return $mailer->Send() === true;
@@ -224,8 +285,12 @@ if (empty($ids)) {
         $languageName = $booking->email_language_name ?? $booking->language_name ?? '-';
         $visitLevelLabel = $booking->email_visit_level_label ?? $booking->visit_level_label ?? '-';
 
+        $statusMessage = $status === 'rejected'
+            ? 'La tua prenotazione alla Sala OV e stata rifiutata.'
+            : 'La tua prenotazione alla Sala OV e stata approvata.';
+
         return "Gentile {$booking->first_name} {$booking->last_name},\n\n"
-            . "La tua prenotazione alla Sala OV e stata approvata.\n\n"
+            . $statusMessage . "\n\n"
             . "Riepilogo prenotazione:\n"
             . "Data visita: {$booking->visit_date}\n"
             . "Lingua visita: {$languageName}\n"
@@ -257,7 +322,7 @@ if (empty($ids)) {
                 $mailer = Factory::getMailer();
                 $this->setMailerSender($mailer);
                 $mailer->addRecipient($recipient->email, $recipient->name);
-                $mailer->setSubject('Prenotazione Sala OV approvata - ' . $booking->visit_date);
+                $mailer->setSubject($this->getStatusEmailSubject($booking, $status));
                 $mailer->setBody($this->buildBookingEmailBody($booking, $status, $staff));
 
                 if ($mailer->Send() === true) {
@@ -270,6 +335,13 @@ if (empty($ids)) {
             Factory::getApplication()->enqueueMessage('Errore invio email agli amministratori: ' . $e->getMessage(), 'warning');
             return 0;
         }
+    }
+
+    private function getStatusEmailSubject(object $booking, string $status): string
+    {
+        $statusLabel = $status === 'rejected' ? 'rifiutata' : 'approvata';
+
+        return 'Prenotazione Sala OV ' . $statusLabel . ' - ' . $booking->visit_date;
     }
 
     private function getAdminRecipients(): array

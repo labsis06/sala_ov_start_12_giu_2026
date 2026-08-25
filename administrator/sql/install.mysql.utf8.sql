@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS `#__salaov_bookings` (
   `visitors` int unsigned NOT NULL DEFAULT 1,
   `notes` text NULL,
   `status` enum('pending','approved','rejected','cancelled') NOT NULL DEFAULT 'pending',
+  `rejection_reason` text NULL,
   `created` datetime NOT NULL,
   `modified` datetime NULL,
   `checked_out` int unsigned NULL,

@@ -152,6 +152,12 @@ $days = [
                     </div>
 
                     <div class="col-12">
+                        <label class="form-label">Motivazione del rifiuto</label>
+                        <textarea name="rejection_reason" class="form-control" rows="3"><?php echo htmlspecialchars($edit->rejection_reason ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
+                        <div class="form-text">Obbligatoria quando lo stato della prenotazione è “Rifiutata”.</div>
+                    </div>
+
+                    <div class="col-12">
                         <button type="submit" class="btn btn-primary">
                             Salva modifiche
                         </button>
@@ -203,6 +209,24 @@ $days = [
 
             <small class="form-text text-muted">
                 Per le visite già assegnate puoi approvare senza selezionare nuovamente il personale.
+            </small>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <label for="rejection_reason" class="form-label">
+                <strong>Motivazione del rifiuto</strong>
+            </label>
+            <textarea
+                id="rejection_reason"
+                name="rejection_reason"
+                class="form-control"
+                rows="3"
+                placeholder="Indica perché la richiesta viene rifiutata"
+            ></textarea>
+            <small class="form-text text-muted">
+                Obbligatoria per il rifiuto; sarà salvata e inclusa nelle email al richiedente, al personale assegnato e agli amministratori.
             </small>
         </div>
     </div>
@@ -286,6 +310,11 @@ $days = [
                         <span class="badge bg-<?php echo $r->status === 'approved' ? 'success' : ($r->status === 'pending' ? 'warning' : 'secondary'); ?>">
                             <?php echo htmlspecialchars($r->status, ENT_QUOTES, 'UTF-8'); ?>
                         </span>
+                        <?php if ($r->status === 'rejected' && !empty($r->rejection_reason)): ?>
+                            <div class="small text-muted mt-1">
+                                <?php echo nl2br(htmlspecialchars($r->rejection_reason, ENT_QUOTES, 'UTF-8')); ?>
+                            </div>
+                        <?php endif; ?>
                     </td>
 
                     <td>
@@ -327,6 +356,16 @@ $days = [
 
     <script>
     Joomla.submitbutton = function(task) {
+        if (task === 'bookings.reject') {
+            const reason = document.getElementById('rejection_reason');
+
+            if (!reason.value.trim()) {
+                alert('Inserisci la motivazione del rifiuto.');
+                reason.focus();
+                return;
+            }
+        }
+
         document.adminForm.task.value = task;
         document.adminForm.submit();
     };

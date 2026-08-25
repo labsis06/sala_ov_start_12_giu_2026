@@ -51,6 +51,7 @@ class Com_SalaovInstallerScript
         $this->addColumn($db, '#__salaov_bookings', 'day_slot_id', "int unsigned NULL AFTER `slot_id`");
         $this->addColumn($db, '#__salaov_bookings', 'staff_id', "int unsigned NULL AFTER `status`");
         $this->addColumn($db, '#__salaov_bookings', 'staff_name', "varchar(190) NULL AFTER `staff_id`");
+        $this->addColumn($db, '#__salaov_bookings', 'rejection_reason', "text NULL AFTER `status`");
         $this->addColumn($db, '#__salaov_staff', 'spoken_language', "varchar(190) NULL AFTER `phone`");
        $db->setQuery("INSERT IGNORE INTO `#__salaov_staff` (`id`,`name`,`email`,`phone`,`spoken_language`,`published`) VALUES (1,'Personale OV','','','Italiano',1)")->execute();
        $this->updateHomeMenuLink($db);

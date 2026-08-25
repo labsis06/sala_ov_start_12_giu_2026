@@ -32,6 +32,7 @@ class BookingsController extends BaseController
         $app     = Factory::getApplication();
         $ids     = $app->input->get('cid', [], 'array');
         $staffId = $app->input->getInt('staff_id');
+        $rejectionReason = trim($app->input->getString('rejection_reason', ''));
         $db      = Factory::getContainer()->get('DatabaseDriver');
 
         $ids = array_values(array_filter(array_map('intval', $ids)));
@@ -44,6 +45,15 @@ if (empty($ids)) {
     );
     return;
 }
+
+        if ($status === 'rejected' && $rejectionReason === '') {
+            $this->setRedirect(
+                'index.php?option=com_salaov&view=bookings',
+                'Inserisci la motivazione del rifiuto.',
+                'warning'
+            );
+            return;
+        }
 
 
         $staff = null;
@@ -99,6 +109,9 @@ if (empty($ids)) {
                 $sets[] = $db->quoteName('staff_id') . ' = ' . (int) $bookingStaff->id;
                 $sets[] = $db->quoteName('staff_name') . ' = ' . $db->quote($bookingStaff->name);
             }
+
+            $sets[] = $db->quoteName('rejection_reason') . ' = '
+                . ($status === 'rejected' ? $db->quote($rejectionReason) : 'NULL');
 
             $query = $db->getQuery(true)
                 ->update($db->quoteName('#__salaov_bookings'))
@@ -289,8 +302,13 @@ if (empty($ids)) {
             ? 'La tua prenotazione alla Sala OV e stata rifiutata.'
             : 'La tua prenotazione alla Sala OV e stata approvata.';
 
+        $rejectionReason = $status === 'rejected' && !empty($booking->rejection_reason)
+            ? "Motivazione del rifiuto: " . trim((string) $booking->rejection_reason) . "\n"
+            : '';
+
         return "Gentile {$booking->first_name} {$booking->last_name},\n\n"
             . $statusMessage . "\n\n"
+            . $rejectionReason
             . "Riepilogo prenotazione:\n"
             . "Data visita: {$booking->visit_date}\n"
             . "Lingua visita: {$languageName}\n"
@@ -389,9 +407,13 @@ if (empty($ids)) {
         $staffName = $staff->name ?? $booking->staff_name ?? '';
         $languageName = $booking->email_language_name ?? $booking->language_name ?? '-';
         $visitLevelLabel = $booking->email_visit_level_label ?? $booking->visit_level_label ?? '-';
+        $rejectionReason = $status === 'rejected' && !empty($booking->rejection_reason)
+            ? "Motivazione del rifiuto: " . trim((string) $booking->rejection_reason) . "\n"
+            : '';
 
         return "Prenotazione Sala OV aggiornata.\n\n"
             . "Stato richiesta: {$status}\n"
+            . $rejectionReason
             . "Data visita: {$booking->visit_date}\n"
             . "Fascia oraria: {$slot}\n"
             . "Lingua visita: {$languageName}\n"
@@ -465,9 +487,19 @@ if (empty($ids)) {
 
     $allowedStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
     $status = $app->input->getCmd('status', 'pending');
+    $rejectionReason = trim($app->input->getString('rejection_reason', ''));
 
     if (!in_array($status, $allowedStatuses, true)) {
         $status = 'pending';
+    }
+
+    if ($status === 'rejected' && $rejectionReason === '') {
+        $this->setRedirect(
+            'index.php?option=com_salaov&view=bookings&edit=' . (int) $id,
+            'Inserisci la motivazione del rifiuto.',
+            'warning'
+        );
+        return;
     }
 
     $visitDate = $app->input->getString('visit_date', '');
@@ -498,6 +530,7 @@ if (empty($ids)) {
         $db->quoteName('staff_id') . ' = ' . (int) $staffId,
         $db->quoteName('staff_name') . ' = ' . $db->quote($staffName),
         $db->quoteName('status') . ' = ' . $db->quote($status),
+        $db->quoteName('rejection_reason') . ' = ' . ($status === 'rejected' ? $db->quote($rejectionReason) : 'NULL'),
         $db->quoteName('notes') . ' = ' . $db->quote($app->input->getString('notes', '')),
         $db->quoteName('modified') . ' = NOW()',
     ];
@@ -525,7 +558,7 @@ if (empty($ids)) {
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename=salaov_prenotazioni.csv');
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['ID','Data','Fascia','Nome','Cognome','Email','Telefono','Ente/Scuola','Livello visita','Visitatori','Stato','Personale','Note']);
+        fputcsv($out, ['ID','Data','Fascia','Nome','Cognome','Email','Telefono','Ente/Scuola','Livello visita','Visitatori','Stato','Motivazione rifiuto','Personale','Note']);
         foreach ($rows as $r) {
            fputcsv($out, [
     $r['id'],
@@ -539,6 +572,7 @@ if (empty($ids)) {
     $r['visit_level_label'],
     $r['visitors'],
     $r['status'],
+    $r['rejection_reason'],
     $r['staff_label'],
     $r['notes']
 ]);

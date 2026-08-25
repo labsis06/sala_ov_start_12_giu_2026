@@ -49,6 +49,7 @@ class Com_SalaovInstallerScript
         ];
         foreach ($queries as $query) { $db->setQuery($query)->execute(); }
         $this->addColumn($db, '#__salaov_bookings', 'day_slot_id', "int unsigned NULL AFTER `slot_id`");
+        $this->addColumn($db, '#__salaov_bookings', 'rejection_reason', "text NULL AFTER `status`");
         $this->addColumn($db, '#__salaov_bookings', 'staff_id', "int unsigned NULL AFTER `status`");
         $this->addColumn($db, '#__salaov_bookings', 'staff_name', "varchar(190) NULL AFTER `staff_id`");
         $this->addColumn($db, '#__salaov_staff', 'spoken_language', "varchar(190) NULL AFTER `phone`");

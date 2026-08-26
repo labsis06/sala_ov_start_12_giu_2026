@@ -54,11 +54,11 @@ $loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUr
           <div class="col-md-6"><label class="form-label" for="salaov_first_name">Nome</label><input id="salaov_first_name" class="form-control" name="first_name" required><div class="invalid-feedback">Inserisci il nome.</div></div>
           <div class="col-md-6"><label class="form-label" for="salaov_last_name">Cognome</label><input id="salaov_last_name" class="form-control" name="last_name" required><div class="invalid-feedback">Inserisci il cognome.</div></div>
           <div class="col-md-6"><label class="form-label" for="salaov_email">Email</label><input id="salaov_email" class="form-control" type="email" name="email" value="<?php echo htmlspecialchars($user->guest ? '' : $user->email, ENT_QUOTES, 'UTF-8'); ?>" required><div class="invalid-feedback">Inserisci un indirizzo email valido.</div></div>
-          <div class="col-md-6"><label class="form-label">Telefono</label><input class="form-control" name="phone" required></div>
+          <div class="col-md-6"><label class="form-label">Telefono</label><input class="form-control" name="phone"></div>
 
           <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Gruppo visita</h3></div>
-          <div class="col-md-8"><label class="form-label" for="salaov_organization">Ente/Scuola o denominazione del gruppo</label><input id="salaov_organization" class="form-control" name="organization" placeholder="Per più visitatori, indica la denominazione del gruppo" required><div class="form-text">Se la visita comprende più di una persona, inserisci una denominazione che identifichi il gruppo.</div></div>
-          <div class="col-md-4"><label class="form-label">Numero visitatori</label><input class="form-control" type="number" name="visitors" min="1" value="1" required></div>
+          <div class="col-md-8"><label class="form-label" for="salaov_organization">Ente/Scuola o denominazione del gruppo</label><input id="salaov_organization" class="form-control" name="organization" placeholder="Per più visitatori, indica la denominazione del gruppo"><div class="form-text">Se la visita comprende più di una persona, inserisci una denominazione che identifichi il gruppo.</div><div class="invalid-feedback">Inserisci la denominazione del gruppo per una visita con più partecipanti.</div></div>
+          <div class="col-md-4"><label class="form-label" for="salaov_visitors">Numero visitatori</label><input id="salaov_visitors" class="form-control" type="number" name="visitors" min="1" value="1" required></div>
           <div class="col-md-4">
             <label class="form-label">Lingua visita</label>
             <select class="form-select" name="language_id" required>
@@ -145,6 +145,18 @@ $loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUr
     if(first) slotSelect.value=first.value;
   }
   dateInput.addEventListener('change',filterSlots); filterSlots();
+
+  var visitorsInput=document.getElementById('salaov_visitors');
+  var organizationInput=document.getElementById('salaov_organization');
+  function updateOrganizationRequirement(){
+    if(!visitorsInput || !organizationInput) return;
+    organizationInput.required=Number(visitorsInput.value)>1;
+  }
+  if(visitorsInput){
+    visitorsInput.addEventListener('input',updateOrganizationRequirement);
+    visitorsInput.addEventListener('change',updateOrganizationRequirement);
+  }
+  updateOrganizationRequirement();
 
   Array.prototype.forEach.call(document.querySelectorAll('.needs-validation'), function(form) {
     var validationAlert=form.querySelector('[data-salaov-validation-alert]');

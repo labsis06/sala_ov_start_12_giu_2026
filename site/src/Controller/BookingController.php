@@ -27,9 +27,16 @@ class BookingController extends BaseController
         $firstName = trim($app->input->getString('first_name'));
         $lastName = trim($app->input->getString('last_name'));
         $email = trim($app->input->getString('email'));
+        $organization = trim($app->input->getString('organization'));
 
         if ($firstName === '' || $lastName === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $app->enqueueMessage('Nome, Cognome ed Email sono obbligatori. Inserisci un indirizzo email valido.', 'error');
+            $this->setRedirect($redirect);
+            return;
+        }
+
+        if ($visitors > 1 && $organization === '') {
+            $app->enqueueMessage('La denominazione del gruppo è obbligatoria per una visita con più partecipanti.', 'error');
             $this->setRedirect($redirect);
             return;
         }
@@ -130,7 +137,7 @@ if (!$visitLevel) {
             'last_name' => $lastName,
             'email' => $email,
             'phone' => $app->input->getString('phone'),
-            'organization' => $app->input->getString('organization'),
+            'organization' => $organization,
             'visitors' => $visitors,
             'notes' => $app->input->getString('notes'),
             'status' => $bookingStatus,

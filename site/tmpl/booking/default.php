@@ -53,7 +53,7 @@ $loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUr
           <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Referente</h3></div>
           <div class="col-md-6"><label class="form-label" for="salaov_first_name">Nome</label><input id="salaov_first_name" class="form-control" name="first_name" required><div class="invalid-feedback">Inserisci il nome.</div></div>
           <div class="col-md-6"><label class="form-label" for="salaov_last_name">Cognome</label><input id="salaov_last_name" class="form-control" name="last_name" required><div class="invalid-feedback">Inserisci il cognome.</div></div>
-          <div class="col-md-6"><label class="form-label" for="salaov_email">Email</label><input id="salaov_email" class="form-control" type="email" name="email" value="<?php echo htmlspecialchars($user->guest ? '' : $user->email, ENT_QUOTES, 'UTF-8'); ?>" required><div class="invalid-feedback">Inserisci un indirizzo email valido.</div></div>
+          <div class="col-md-6"><label class="form-label" for="salaov_email">Email</label><input id="salaov_email" class="form-control" type="email" name="email" required><div class="invalid-feedback">Inserisci un indirizzo email valido.</div></div>
           <div class="col-md-6"><label class="form-label">Telefono</label><input class="form-control" name="phone"></div>
 
           <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Gruppo visita</h3></div>

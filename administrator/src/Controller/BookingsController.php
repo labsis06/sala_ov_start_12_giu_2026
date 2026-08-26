@@ -147,6 +147,8 @@ if (empty($ids)) {
             if ($adminEmailsSent > 0) {
                 $message .= ' Email inviata agli amministratori: ' . $adminEmailsSent . '.';
             }
+
+            $message .= ' Email inviata al richiedente: ' . $requesterEmailsSent . '.';
         } else {
             $message = in_array($status, ['rejected', 'cancelled'], true)
                 ? ($status === 'rejected' ? 'Prenotazione rifiutata.' : 'Prenotazione cancellata.')

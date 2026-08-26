@@ -46,10 +46,10 @@ if (empty($ids)) {
     return;
 }
 
-        if ($status === 'rejected' && $rejectionReason === '') {
+        if (in_array($status, ['rejected', 'cancelled'], true) && $rejectionReason === '') {
             $this->setRedirect(
                 'index.php?option=com_salaov&view=bookings',
-                'Inserisci la motivazione del rifiuto.',
+                'Inserisci la motivazione del rifiuto/cancellazione.',
                 'warning'
             );
             return;
@@ -102,7 +102,7 @@ if (empty($ids)) {
 
             $sets = [
                 $db->quoteName('status') . ' = ' . $db->quote($status),
-                $db->quoteName('rejection_reason') . ' = ' . ($status === 'rejected' ? $db->quote($rejectionReason) : 'NULL'),
+                $db->quoteName('rejection_reason') . ' = ' . (in_array($status, ['rejected', 'cancelled'], true) ? $db->quote($rejectionReason) : 'NULL'),
                 $db->quoteName('modified') . ' = NOW()',
             ];
 
@@ -122,13 +122,13 @@ if (empty($ids)) {
                 if (!empty($bookingStaff->email) && $this->sendStaffAssignmentEmail($id, $bookingStaff)) {
                     $emailsSent++;
                 }
-            } elseif ($status === 'rejected' && $bookingStaff && !empty($bookingStaff->email)) {
+            } elseif (in_array($status, ['rejected', 'cancelled'], true) && $bookingStaff && !empty($bookingStaff->email)) {
                 if ($this->sendStaffStatusEmail($id, $status, $bookingStaff)) {
                     $emailsSent++;
                 }
             }
 
-            if ($withStaff || $status === 'rejected') {
+            if ($withStaff || in_array($status, ['rejected', 'cancelled'], true)) {
                 $adminEmailsSent += $this->sendAdminStatusEmail($id, $status, $bookingStaff);
                 if ($this->sendRequesterStatusEmail($id, $status, $bookingStaff)) {
                     $requesterEmailsSent++;
@@ -148,8 +148,9 @@ if (empty($ids)) {
                 $message .= ' Email inviata agli amministratori: ' . $adminEmailsSent . '.';
             }
         } else {
-            $message = $status === 'rejected'
-                ? 'Prenotazione rifiutata. Email inviate: richiedenti ' . $requesterEmailsSent
+            $message = in_array($status, ['rejected', 'cancelled'], true)
+                ? ($status === 'rejected' ? 'Prenotazione rifiutata.' : 'Prenotazione cancellata.')
+                    . ' Email inviate: richiedenti ' . $requesterEmailsSent
                     . ', amministratori ' . $adminEmailsSent . ', personale assegnato ' . $emailsSent . '.'
                 : 'Stato aggiornato.';
         }
@@ -298,9 +299,11 @@ if (empty($ids)) {
 
         $statusMessage = $status === 'rejected'
             ? 'La tua prenotazione alla Sala OV e stata rifiutata.'
-            : 'La tua prenotazione alla Sala OV e stata approvata.';
-        $rejectionReason = $status === 'rejected'
-            ? "Motivazione del rifiuto: " . trim((string) $booking->rejection_reason) . "\n\n"
+            : ($status === 'cancelled'
+                ? 'La tua prenotazione alla Sala OV e stata cancellata.'
+                : 'La tua prenotazione alla Sala OV e stata approvata.');
+        $rejectionReason = in_array($status, ['rejected', 'cancelled'], true)
+            ? "Motivazione del rifiuto/cancellazione: " . trim((string) $booking->rejection_reason) . "\n\n"
             : '';
 
         return "Gentile {$booking->first_name} {$booking->last_name},\n\n"
@@ -354,7 +357,7 @@ if (empty($ids)) {
 
     private function getStatusEmailSubject(object $booking, string $status): string
     {
-        $statusLabel = $status === 'rejected' ? 'rifiutata' : 'approvata';
+        $statusLabel = $status === 'rejected' ? 'rifiutata' : ($status === 'cancelled' ? 'cancellata' : 'approvata');
 
         return 'Prenotazione Sala OV ' . $statusLabel . ' - ' . $booking->visit_date;
     }
@@ -404,8 +407,8 @@ if (empty($ids)) {
         $staffName = $staff->name ?? $booking->staff_name ?? '';
         $languageName = $booking->email_language_name ?? $booking->language_name ?? '-';
         $visitLevelLabel = $booking->email_visit_level_label ?? $booking->visit_level_label ?? '-';
-        $rejectionReason = $status === 'rejected'
-            ? "Motivazione del rifiuto: " . trim((string) $booking->rejection_reason) . "\n"
+        $rejectionReason = in_array($status, ['rejected', 'cancelled'], true)
+            ? "Motivazione del rifiuto/cancellazione: " . trim((string) $booking->rejection_reason) . "\n"
             : '';
 
         return "Prenotazione Sala OV aggiornata.\n\n"
@@ -443,6 +446,8 @@ if (empty($ids)) {
         );
         return;
     }
+
+    $bookingBeforeEdit = $this->getBookingForEmail($id);
 
     $languageId   = $app->input->getInt('language_id', 0);
     $visitLevelId = $app->input->getInt('visit_level_id', 0);
@@ -491,10 +496,10 @@ if (empty($ids)) {
 
     $rejectionReason = trim($app->input->getString('rejection_reason', ''));
 
-    if ($status === 'rejected' && $rejectionReason === '') {
+    if (in_array($status, ['rejected', 'cancelled'], true) && $rejectionReason === '') {
         $this->setRedirect(
             'index.php?option=com_salaov&view=bookings&edit=' . (int) $id,
-            'Inserisci la motivazione del rifiuto.',
+            'Inserisci la motivazione del rifiuto/cancellazione.',
             'warning'
         );
         return;
@@ -528,7 +533,7 @@ if (empty($ids)) {
         $db->quoteName('staff_id') . ' = ' . (int) $staffId,
         $db->quoteName('staff_name') . ' = ' . $db->quote($staffName),
         $db->quoteName('status') . ' = ' . $db->quote($status),
-        $db->quoteName('rejection_reason') . ' = ' . ($status === 'rejected' ? $db->quote($rejectionReason) : 'NULL'),
+        $db->quoteName('rejection_reason') . ' = ' . (in_array($status, ['rejected', 'cancelled'], true) ? $db->quote($rejectionReason) : 'NULL'),
         $db->quoteName('notes') . ' = ' . $db->quote($app->input->getString('notes', '')),
         $db->quoteName('modified') . ' = NOW()',
     ];
@@ -539,6 +544,15 @@ if (empty($ids)) {
         ->where($db->quoteName('id') . ' = ' . (int) $id);
 
     $db->setQuery($query)->execute();
+
+    if ($status === 'cancelled' && (!$bookingBeforeEdit || $bookingBeforeEdit->status !== 'cancelled')) {
+        $bookingStaff = $this->getBookingStaff((object) ['staff_id' => $staffId]);
+        if ($bookingStaff && !empty($bookingStaff->email)) {
+            $this->sendStaffStatusEmail($id, $status, $bookingStaff);
+        }
+        $this->sendAdminStatusEmail($id, $status, $bookingStaff);
+        $this->sendRequesterStatusEmail($id, $status, $bookingStaff);
+    }
 
     $this->setRedirect(
         'index.php?option=com_salaov&view=bookings',

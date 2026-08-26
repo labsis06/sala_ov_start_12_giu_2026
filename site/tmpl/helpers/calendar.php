@@ -212,6 +212,47 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
     outline-offset:2px!important;
 }
 
+#<?php echo $uid; ?> .salaov-prev,
+#<?php echo $uid; ?> .salaov-next{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:48px!important;
+    height:48px!important;
+    padding:0!important;
+    border:2px solid #1d4ed8!important;
+    border-radius:12px!important;
+    background:#2563eb!important;
+    color:#fff!important;
+    font-size:2rem!important;
+    font-weight:800!important;
+    line-height:1!important;
+    box-shadow:0 4px 10px rgba(37,99,235,.28)!important;
+    transition:background-color .15s ease,transform .15s ease,box-shadow .15s ease!important;
+}
+
+#<?php echo $uid; ?> .salaov-prev:hover:not(:disabled),
+#<?php echo $uid; ?> .salaov-next:hover:not(:disabled){
+    background:#1d4ed8!important;
+    transform:translateY(-1px)!important;
+    box-shadow:0 6px 14px rgba(37,99,235,.35)!important;
+}
+
+#<?php echo $uid; ?> .salaov-prev:focus-visible,
+#<?php echo $uid; ?> .salaov-next:focus-visible{
+    outline:3px solid rgba(37,99,235,.35)!important;
+    outline-offset:3px!important;
+}
+
+#<?php echo $uid; ?> .salaov-prev:disabled,
+#<?php echo $uid; ?> .salaov-next:disabled{
+    background:#cbd5e1!important;
+    border-color:#94a3b8!important;
+    color:#475569!important;
+    box-shadow:none!important;
+    opacity:1!important;
+}
+
 @media(max-width:576px){
     #<?php echo $uid; ?>.salaov-calendar{
         max-width:100%!important;
@@ -262,9 +303,9 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
                 
             </div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary salaov-prev">&lsaquo;</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary salaov-prev" aria-label="Mese precedente" title="Mese precedente">&lsaquo;</button>
                     <strong class="salaov-current-month"></strong>
-                    <button type="button" class="btn btn-sm btn-outline-secondary salaov-next">&rsaquo;</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary salaov-next" aria-label="Mese successivo" title="Mese successivo">&rsaquo;</button>
                 </div>
                 <div class="salaov-months">
                 <?php $idx=0; foreach ($grouped as $monthKey => $monthDays): $first = reset($monthDays)['date']; $firstOfMonth=$first->modify('first day of this month'); $offset=(int)$firstOfMonth->format('N')-1; ?>

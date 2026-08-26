@@ -24,6 +24,15 @@ class BookingController extends BaseController
         $date = $app->input->getString('visit_date');
         $slotInput = $app->input->getString('slot_id');
         $visitors = (int) $app->input->getInt('visitors');
+        $firstName = trim($app->input->getString('first_name'));
+        $lastName = trim($app->input->getString('last_name'));
+        $email = trim($app->input->getString('email'));
+
+        if ($firstName === '' || $lastName === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $app->enqueueMessage('Nome, Cognome ed Email sono obbligatori. Inserisci un indirizzo email valido.', 'error');
+            $this->setRedirect($redirect);
+            return;
+        }
         $canApproveDirectly = $user && !$user->guest && (
             $user->authorise('core.admin') ||
             $user->authorise('core.manage', 'com_salaov')
@@ -39,7 +48,7 @@ $bookingStatus = $approveNow ? 'approved' : 'pending';
 
         $weekday = (int) (new \DateTimeImmutable($date))->format('N');
         if ($isDaySlot) {
-            $db->setQuery('SELECT capacity, visit_date FROM #__salaov_day_slots WHERE published = 1 AND id = ' . (int) $daySlotId);
+            $db->setQuery('SELECT capacity, visit_date, title, start_time, end_time FROM #__salaov_day_slots WHERE published = 1 AND id = ' . (int) $daySlotId);
             $slotRow = $db->loadObject();
             $capacity = $slotRow ? (int) $slotRow->capacity : 0;
             if (!$slotRow || (string) $slotRow->visit_date !== $date) {
@@ -48,7 +57,7 @@ $bookingStatus = $approveNow ? 'approved' : 'pending';
                 return;
             }
         } else {
-            $db->setQuery('SELECT capacity, weekday FROM #__salaov_slots WHERE published = 1 AND id = ' . (int) $slot);
+            $db->setQuery('SELECT capacity, weekday, title, start_time, end_time FROM #__salaov_slots WHERE published = 1 AND id = ' . (int) $slot);
             $slotRow = $db->loadObject();
             $capacity = $slotRow ? (int) $slotRow->capacity : 0;
             if (!$slotRow || (int) $slotRow->weekday !== $weekday) {
@@ -117,9 +126,9 @@ if (!$visitLevel) {
             'slot_id' => $slot,
             'day_slot_id' => $daySlotId ?: null,
             'visit_date' => $date,
-            'first_name' => $app->input->getString('first_name'),
-            'last_name' => $app->input->getString('last_name'),
-            'email' => $app->input->getString('email'),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $email,
             'phone' => $app->input->getString('phone'),
             'organization' => $app->input->getString('organization'),
             'visitors' => $visitors,
@@ -134,6 +143,9 @@ if (!$visitLevel) {
 
         $db->insertObject('#__salaov_bookings', $booking);
         $booking->id = (int) $db->insertid();
+        $booking->slot_label = trim((string) $slotRow->title)
+            . ' ' . substr((string) $slotRow->start_time, 0, 5)
+            . '-' . substr((string) $slotRow->end_time, 0, 5);
         $this->sendNotice($booking);
         $this->sendReferentNotice($booking, $approveNow ? 'approved' : 'pending');
         $this->sendRequesterNotice($booking, $approveNow ? 'approved' : 'pending');
@@ -184,6 +196,7 @@ if (!$visitLevel) {
                 "Nuova richiesta di prenotazione Sala OV.\n\n"
                 . "Stato richiesta: {$booking->status}\n"
                 . "Data visita: {$booking->visit_date}\n"
+                . "Fascia oraria: {$booking->slot_label}\n"
                 . "Lingua visita: {$booking->language_name}\n"
                 . "Livello visita: {$booking->visit_level_label}\n"
                 . "Personale OV assegnato alla visita: " . ($booking->staff_name ?? '-') . "\n"
@@ -244,6 +257,7 @@ if (!$visitLevel) {
             . $statusLabel . "\n\n"
             . "Riepilogo richiesta:\n"
             . "Data visita: {$booking->visit_date}\n"
+            . "Fascia oraria: {$booking->slot_label}\n"
             . "Lingua visita: {$booking->language_name}\n"
             . "Livello visita: {$booking->visit_level_label}\n"
             . "Visitatori: {$booking->visitors}\n"
@@ -310,6 +324,7 @@ if (!$visitLevel) {
 
         return "Prenotazione Sala OV {$statusLabel}.\n\n"
             . "Data visita: {$booking->visit_date}\n"
+            . "Fascia oraria: {$booking->slot_label}\n"
             . "Lingua visita: {$booking->language_name}\n"
             . "Livello visita: {$booking->visit_level_label}\n"
             . "Richiedente: {$booking->first_name} {$booking->last_name}\n"

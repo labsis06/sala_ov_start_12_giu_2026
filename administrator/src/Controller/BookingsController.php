@@ -202,14 +202,15 @@ if (empty($ids)) {
             $query = $db->getQuery(true)
                 ->select([
                     'b.*',
-                    's.title AS slot_title',
-                    's.start_time',
-                    's.end_time',
+                    'COALESCE(ds.title, s.title) AS slot_title',
+                    'COALESCE(ds.start_time, s.start_time) AS start_time',
+                    'COALESCE(ds.end_time, s.end_time) AS end_time',
                     'COALESCE(NULLIF(b.language_name, ' . $db->quote('') . '), l.title, ' . $db->quote('-') . ') AS email_language_name',
                     'COALESCE(NULLIF(b.visit_level_label, ' . $db->quote('') . '), vl.title, ' . $db->quote('-') . ') AS email_visit_level_label',
                 ])
                 ->from($db->quoteName('#__salaov_bookings', 'b'))
                 ->join('LEFT', $db->quoteName('#__salaov_slots', 's') . ' ON s.id = b.slot_id')
+                ->join('LEFT', $db->quoteName('#__salaov_day_slots', 'ds') . ' ON ds.id = b.day_slot_id')
                 ->join('LEFT', $db->quoteName('#__salaov_languages', 'l') . ' ON l.id = b.language_id')
                 ->join('LEFT', $db->quoteName('#__salaov_visit_levels', 'vl') . ' ON vl.id = b.visit_level_id')
                 ->where('b.id = ' . (int) $bookingId);
@@ -384,14 +385,15 @@ if (empty($ids)) {
         $query = $db->getQuery(true)
             ->select([
                 'b.*',
-                's.title AS slot_title',
-                's.start_time',
-                's.end_time',
+                'COALESCE(ds.title, s.title) AS slot_title',
+                'COALESCE(ds.start_time, s.start_time) AS start_time',
+                'COALESCE(ds.end_time, s.end_time) AS end_time',
                 'COALESCE(NULLIF(b.language_name, ' . $db->quote('') . '), l.title, ' . $db->quote('-') . ') AS email_language_name',
                 'COALESCE(NULLIF(b.visit_level_label, ' . $db->quote('') . '), vl.title, ' . $db->quote('-') . ') AS email_visit_level_label',
             ])
             ->from($db->quoteName('#__salaov_bookings', 'b'))
             ->join('LEFT', $db->quoteName('#__salaov_slots', 's') . ' ON s.id = b.slot_id')
+            ->join('LEFT', $db->quoteName('#__salaov_day_slots', 'ds') . ' ON ds.id = b.day_slot_id')
             ->join('LEFT', $db->quoteName('#__salaov_languages', 'l') . ' ON l.id = b.language_id')
             ->join('LEFT', $db->quoteName('#__salaov_visit_levels', 'vl') . ' ON vl.id = b.visit_level_id')
             ->where('b.id = ' . (int) $bookingId);
@@ -565,7 +567,17 @@ if (empty($ids)) {
     public function export()
     {
         $db = Factory::getContainer()->get('DatabaseDriver');
-        $db->setQuery('SELECT b.*, s.title AS slot_title, s.start_time, s.end_time, COALESCE(st.name,b.staff_name) AS staff_label FROM #__salaov_bookings b LEFT JOIN #__salaov_slots s ON s.id=b.slot_id LEFT JOIN #__salaov_staff st ON st.id=b.staff_id ORDER BY b.visit_date DESC, b.id DESC');
+        $db->setQuery(
+            'SELECT b.*, COALESCE(ds.title,s.title) AS slot_title,'
+            . ' COALESCE(ds.start_time,s.start_time) AS start_time,'
+            . ' COALESCE(ds.end_time,s.end_time) AS end_time,'
+            . ' COALESCE(st.name,b.staff_name) AS staff_label'
+            . ' FROM #__salaov_bookings b'
+            . ' LEFT JOIN #__salaov_slots s ON s.id=b.slot_id'
+            . ' LEFT JOIN #__salaov_day_slots ds ON ds.id=b.day_slot_id'
+            . ' LEFT JOIN #__salaov_staff st ON st.id=b.staff_id'
+            . ' ORDER BY b.visit_date DESC, b.id DESC'
+        );
         $rows = $db->loadAssocList();
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename=salaov_prenotazioni.csv');

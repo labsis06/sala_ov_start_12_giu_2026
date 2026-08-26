@@ -15,14 +15,15 @@ class BookingsModel extends BaseDatabaseModel
         $q = $db->getQuery(true)
            ->select([
                 'b.*',
-                's.title AS slot_title',
-                's.start_time',
-                's.end_time',
+                'COALESCE(ds.title, s.title) AS slot_title',
+                'COALESCE(ds.start_time, s.start_time) AS start_time',
+                'COALESCE(ds.end_time, s.end_time) AS end_time',
                 'st.name AS staff_label',
                 'vl.icon AS visit_level_icon'
     ])
             ->from($db->quoteName('#__salaov_bookings', 'b'))
             ->join('LEFT', $db->quoteName('#__salaov_slots', 's') . ' ON s.id = b.slot_id')
+            ->join('LEFT', $db->quoteName('#__salaov_day_slots', 'ds') . ' ON ds.id = b.day_slot_id')
             ->join('LEFT', $db->quoteName('#__salaov_staff', 'st') . ' ON st.id = b.staff_id')
             ->join('LEFT', $db->quoteName('#__salaov_visit_levels', 'vl') . ' ON vl.id = b.visit_level_id')
             ->order('b.visit_date DESC, b.id DESC');

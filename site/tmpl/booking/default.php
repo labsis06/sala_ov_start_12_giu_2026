@@ -38,6 +38,10 @@ $loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUr
   <section id="salaov_booking_form" class="salaov-form-card">
       <h2>Richiesta di prenotazione</h2>
       <form method="post" action="<?php echo Route::_('index.php?option=com_salaov&task=booking.submit'); ?>" class="needs-validation" novalidate>
+        <div class="alert alert-danger d-none" role="alert" data-salaov-validation-alert tabindex="-1">
+          <strong>Completa i campi obbligatori.</strong>
+          Controlla Nome, Cognome ed Email prima di inviare la richiesta.
+        </div>
         <div class="row g-4">
           <div class="col-12"><h3 class="h5 border-bottom pb-2">Dati visita</h3></div>
           <div class="col-md-6"><label for="salaov_visit_date" class="form-label">Data visita</label><input id="salaov_visit_date" class="form-control" type="date" name="visit_date" required></div>
@@ -47,13 +51,13 @@ $loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUr
           </select><div class="form-text">Le fasce vengono filtrate automaticamente dopo la scelta della data.</div></div>
 
           <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Referente</h3></div>
-          <div class="col-md-6"><label class="form-label">Nome</label><input class="form-control" name="first_name" required></div>
-          <div class="col-md-6"><label class="form-label">Cognome</label><input class="form-control" name="last_name" required></div>
-          <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="<?php echo htmlspecialchars($user->guest ? '' : $user->email, ENT_QUOTES, 'UTF-8'); ?>" required></div>
+          <div class="col-md-6"><label class="form-label" for="salaov_first_name">Nome</label><input id="salaov_first_name" class="form-control" name="first_name" required><div class="invalid-feedback">Inserisci il nome.</div></div>
+          <div class="col-md-6"><label class="form-label" for="salaov_last_name">Cognome</label><input id="salaov_last_name" class="form-control" name="last_name" required><div class="invalid-feedback">Inserisci il cognome.</div></div>
+          <div class="col-md-6"><label class="form-label" for="salaov_email">Email</label><input id="salaov_email" class="form-control" type="email" name="email" value="<?php echo htmlspecialchars($user->guest ? '' : $user->email, ENT_QUOTES, 'UTF-8'); ?>" required><div class="invalid-feedback">Inserisci un indirizzo email valido.</div></div>
           <div class="col-md-6"><label class="form-label">Telefono</label><input class="form-control" name="phone" required></div>
 
           <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Gruppo visita</h3></div>
-          <div class="col-md-8"><label class="form-label">Ente/Scuola</label><input class="form-control" name="organization" required></div>
+          <div class="col-md-8"><label class="form-label" for="salaov_organization">Ente/Scuola o denominazione del gruppo</label><input id="salaov_organization" class="form-control" name="organization" placeholder="Per più visitatori, indica la denominazione del gruppo" required><div class="form-text">Se la visita comprende più di una persona, inserisci una denominazione che identifichi il gruppo.</div></div>
           <div class="col-md-4"><label class="form-label">Numero visitatori</label><input class="form-control" type="number" name="visitors" min="1" value="1" required></div>
           <div class="col-md-4">
             <label class="form-label">Lingua visita</label>
@@ -141,5 +145,19 @@ $loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUr
     if(first) slotSelect.value=first.value;
   }
   dateInput.addEventListener('change',filterSlots); filterSlots();
+
+  Array.prototype.forEach.call(document.querySelectorAll('.needs-validation'), function(form) {
+    var validationAlert=form.querySelector('[data-salaov-validation-alert]');
+    form.addEventListener('submit', function(event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+        if(validationAlert){ validationAlert.classList.remove('d-none'); validationAlert.focus(); }
+      } else if(validationAlert) {
+        validationAlert.classList.add('d-none');
+      }
+      form.classList.add('was-validated');
+    });
+  });
 })();
 </script>

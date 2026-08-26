@@ -47,6 +47,25 @@ class BookingController extends BaseController
 
 $approveNow = $canApproveDirectly && $app->input->getInt('approve_now', 0) === 1;
 $bookingStatus = $approveNow ? 'approved' : 'pending';
+        $staff = null;
+        $staffId = $canApproveDirectly ? $app->input->getInt('staff_id', 0) : 0;
+
+        if ($staffId > 0) {
+            $query = $db->getQuery(true)
+                ->select($db->quoteName(['id', 'name']))
+                ->from($db->quoteName('#__salaov_staff'))
+                ->where($db->quoteName('id') . ' = ' . (int) $staffId)
+                ->where($db->quoteName('published') . ' = 1');
+            $db->setQuery($query);
+            $staff = $db->loadObject();
+
+            if (!$staff) {
+                $app->enqueueMessage('Seleziona un membro del personale valido.', 'error');
+                $this->setRedirect($redirect);
+                return;
+            }
+        }
+
         $slot = 0;
         $daySlotId = 0;
         $isDaySlot = strpos($slotInput, 'd:') === 0;
@@ -146,6 +165,8 @@ if (!$visitLevel) {
             'language_name' => $language->title,
             'visit_level_id'    => (int) $visitLevel->id,
             'visit_level_label' => $visitLevel->title,
+            'staff_id' => $staff ? (int) $staff->id : null,
+            'staff_name' => $staff ? $staff->name : null,
         ];
 
         $db->insertObject('#__salaov_bookings', $booking);

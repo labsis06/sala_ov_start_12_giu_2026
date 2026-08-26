@@ -103,6 +103,22 @@ $loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUr
           <div class="col-12"><label class="form-label">Note</label><textarea class="form-control" name="notes" rows="4" placeholder="Indica eventuali esigenze o informazioni utili"></textarea></div>
         </div>
         <?php if ($canApproveDirectly): ?>
+    <div class="col-12 mt-4">
+        <label class="form-label" for="salaov_staff_id">Personale assegnato alla visita</label>
+        <select class="form-select" id="salaov_staff_id" name="staff_id">
+            <option value="">Nessuna assegnazione</option>
+            <?php foreach (($this->staff ?? []) as $staff): ?>
+                <option value="<?php echo (int) $staff->id; ?>">
+                    <?php echo htmlspecialchars(
+                        $staff->name . (!empty($staff->spoken_language) ? ' - ' . $staff->spoken_language : ''),
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <div class="form-text">Campo visibile solo agli utenti con permessi amministrativi.</div>
+    </div>
     <div class="col-12">
         <div class="alert alert-info mb-0">
             <div class="form-check">

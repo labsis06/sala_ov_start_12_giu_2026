@@ -38,6 +38,19 @@ class BookingModel extends BaseDatabaseModel
     return $db->loadObjectList();
 }
 
+    public function getStaff()
+    {
+        $db = $this->getDatabase();
+        $query = $db->getQuery(true)
+            ->select($db->quoteName(['id', 'name', 'spoken_language']))
+            ->from($db->quoteName('#__salaov_staff'))
+            ->where($db->quoteName('published') . ' = 1')
+            ->order($db->quoteName('name') . ' ASC');
+        $db->setQuery($query);
+
+        return $db->loadObjectList();
+    }
+
 
     public function getDayRules()
     {

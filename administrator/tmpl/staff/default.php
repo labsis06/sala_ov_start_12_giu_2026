@@ -9,7 +9,12 @@ foreach ($this->items as $item) {
     if ((int) $item->id === $editId) { $edit = $item; break; }
 }
 ?>
-<h1>Personale visite</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Personale visite</h1>
+    <a class="btn btn-outline-secondary" href="<?php echo Route::_('index.php?option=com_salaov'); ?>">
+        Torna alla dashboard
+    </a>
+</div>
 
 <div class="card mb-4">
     <div class="card-header">

@@ -30,6 +30,10 @@ $loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUr
       Compila il modulo qui sotto: la prenotazione verrà salvata in attesa di approvazione.
       Se sei un amministratore, <a href="<?php echo $loginUrl; ?>" class="alert-link">effettua il login</a>
       per sbloccare le funzionalità riservate, come l'abilitazione dei menu e l'inserimento con approvazione diretta della richiesta.
+      <div class="mt-2">
+        Per essere registrati come amministratore, inviare un'email a
+        <a href="mailto:giuseppe.borriello@ingv.it" class="alert-link">giuseppe.borriello@ingv.it</a>.
+      </div>
     </div>
   <?php endif; ?>
 

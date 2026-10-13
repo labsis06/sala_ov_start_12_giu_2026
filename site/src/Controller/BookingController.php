@@ -104,6 +104,25 @@ $bookingStatus = $approveNow ? 'approved' : 'pending';
             $capacity = min($capacity, (int) $dayRule->capacity);
         }
 
+        // Consente una sola visita per ogni data e fascia oraria
+        $db->setQuery(
+        'SELECT COUNT(*) FROM #__salaov_bookings'
+        . ' WHERE status IN (' . $db->quote('pending') . ',' . $db->quote('approved') . ')'
+        . ' AND visit_date = ' . $db->quote($date)
+        . ' AND slot_id = ' . $slot
+            );
+
+        $existingBooking = (int) $db->loadResult();
+
+        if ($existingBooking > 0) {
+        $app->enqueueMessage(
+        'La fascia oraria selezionata è già occupata per questa data.',
+        'error'
+        );
+        $this->setRedirect($redirect);
+        return;
+    }
+        
         $db->setQuery(
             'SELECT COALESCE(SUM(visitors), 0) FROM #__salaov_bookings'
             . ' WHERE status IN (' . $db->quote('pending') . ',' . $db->quote('approved') . ')'

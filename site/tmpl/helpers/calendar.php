@@ -146,8 +146,8 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
 #<?php echo $uid; ?> .salaov-empty{
     width:100%!important;
     min-width:0!important;
-    height:68px!important;
-    min-height:68px!important;
+    height:86px!important;
+    min-height:86px!important;
     border-radius:9px!important;
     box-sizing:border-box!important;
 }
@@ -159,12 +159,11 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
 #<?php echo $uid; ?> .salaov-day{
     flex-direction:column!important;
     align-items:center!important;
-    justify-content:space-around!important;
-    gap:2px!important;
+    justify-content:center!important;
+    gap:1px!important;
     text-align:center!important;
-    white-space:normal!important;
-    line-height:1.1!important;
-    padding:5px 3px!important;
+    line-height:1!important;
+    padding:3px 2px!important;
     overflow:visible!important;
     font-weight:900!important;
     border:1px solid rgba(0,0,0,.15)!important;
@@ -194,20 +193,11 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
 }
 
 #<?php echo $uid; ?> .salaov-day-caption{
-    display:block!important;
-    visibility:visible!important;
-    opacity:1!important;
-    width:100%!important;
-    height:auto!important;
-    min-height:16px!important;
-    margin-top:3px!important;
-    color:inherit!important;
-    font-size:.68rem!important;
-    font-weight:900!important;
-    line-height:1.1!important;
-    text-align:center!important;
-    white-space:nowrap!important;
-    overflow:visible!important;
+    min-height:0!important;
+    margin-top:1px!important;
+    font-size:.64rem!important;
+    line-height:1!important;
+}
 }
 #<?php echo $uid; ?> .salaov-day-available{background:#15803d!important;color:#fff!important}
 #<?php echo $uid; ?> .salaov-day-pending{background:#facc15!important;color:#1f2937!important}

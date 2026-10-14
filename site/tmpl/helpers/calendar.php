@@ -157,19 +157,17 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
 }
 
 #<?php echo $uid; ?> .salaov-day{
-    display:flex!important;
     flex-direction:column!important;
     align-items:center!important;
-    justify-content:center!important;
-    gap:1px!important;
-    padding:4px 2px!important;
-    border:1px solid rgba(15,23,42,.12)!important;
+    justify-content:space-around!important;
+    gap:2px!important;
     text-align:center!important;
-    overflow:hidden!important;
     white-space:normal!important;
-    word-break:normal!important;
-    line-height:1.05!important;
-    box-shadow:inset 0 -10px 18px rgba(0,0,0,.04)!important;
+    line-height:1.1!important;
+    padding:5px 3px!important;
+    overflow:visible!important;
+    font-weight:900!important;
+    border:1px solid rgba(0,0,0,.15)!important;
 }
 
 #<?php echo $uid; ?> .salaov-day-weekday,
@@ -177,32 +175,40 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
 #<?php echo $uid; ?> .salaov-day-caption{
     display:block!important;
     width:100%!important;
-    max-width:100%!important;
+    font-weight:900!important;
+    text-align:center!important;
+    line-height:1.1!important;
     margin:0!important;
     padding:0!important;
-    text-align:center!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
+    overflow:visible!important;
     white-space:nowrap!important;
 }
 
 #<?php echo $uid; ?> .salaov-day-weekday{
-    font-size:.78rem!important;
-    font-weight:800!important;
-    opacity:.95!important;
+    font-size:.72rem!important;
 }
 
 #<?php echo $uid; ?> .salaov-day-number{
-    font-size:1.42rem!important;
-    font-weight:900!important;
+    font-size:1.25rem!important;
     line-height:1!important;
 }
 
 #<?php echo $uid; ?> .salaov-day-caption{
-    font-size:.70rem!important;
-    font-weight:800!important;
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:16px!important;
+    margin-top:3px!important;
+    color:inherit!important;
+    font-size:.68rem!important;
+    font-weight:900!important;
+    line-height:1.1!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
 }
-
 #<?php echo $uid; ?> .salaov-day-available{background:#15803d!important;color:#fff!important}
 #<?php echo $uid; ?> .salaov-day-pending{background:#facc15!important;color:#1f2937!important}
 #<?php echo $uid; ?> .salaov-day-unavailable{background:#b91c1c!important;color:#fff!important}
@@ -254,29 +260,40 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
 }
 
 @media(max-width:576px){
-    #<?php echo $uid; ?>.salaov-calendar{
-        max-width:100%!important;
+    #<?php echo $uid; ?> .salaov-weekdays,
+    #<?php echo $uid; ?> .salaov-days{
+        gap:3px!important;
     }
 
     #<?php echo $uid; ?> .salaov-day,
-    #<?php echo $uid; ?> .salaov-empty{
-        height:52px!important;
-        min-height:52px!important;
+#<?php echo $uid; ?> .salaov-empty{
+    height:112px!important;
+    min-height:112px!important;
+    box-sizing:border-box!important;
+}
+    #<?php echo $uid; ?> .salaov-day-weekday{
+        font-size:.62rem!important;
     }
 
-    .salaov-day-weekday{
-    font-size:.88rem!important;
-    font-weight:700!important;
-}
+    #<?php echo $uid; ?> .salaov-day-number{
+        font-size:1.05rem!important;
+    }
 
-.salaov-day-number{
-    font-size:1.45rem!important;
+   #<?php echo $uid; ?> .salaov-day-caption{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:16px!important;
+    margin-top:3px!important;
+    color:inherit!important;
+    font-size:.68rem!important;
     font-weight:900!important;
-}
-
-.salaov-day-caption{
-    font-size:.80rem!important;
-    font-weight:700!important;
+    line-height:1.1!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
 }
 }
 </style>

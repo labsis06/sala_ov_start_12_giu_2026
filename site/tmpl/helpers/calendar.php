@@ -80,7 +80,7 @@ if (!function_exists('salaovRenderAvailabilityCalendar')) {
 #<?php echo $uid; ?>.salaov-calendar{
     width:100%!important;
     max-width:900px!important;
-    margin:1rem 0 1.5rem 0!important;
+    margin:1rem auto 1.5rem!important;
     border:1px solid #d6dee8!important;
     border-radius:14px!important;
     background:#fff!important;

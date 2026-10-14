@@ -20,8 +20,7 @@ $loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUr
 ?>
 <div class="salaov">
   <header class="salaov-page-header">
-    <h1>Prenotazione visita Sala di Monitoraggio OV</h1>
-    <p>Seleziona un giorno disponibile dal calendario, scegli la fascia oraria e invia la richiesta. La prenotazione resta in attesa di approvazione.</p>
+   <p>Seleziona un giorno disponibile dal calendario, scegli la fascia oraria e invia la richiesta. La prenotazione resta in attesa di approvazione.</p>
   </header>
 
   <?php if ($user->guest): ?>

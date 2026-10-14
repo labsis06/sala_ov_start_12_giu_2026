@@ -1,0 +1,190 @@
+<?php
+\defined('_JEXEC') or die;
+
+use Joomla\CMS\Factory;
+use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Router\Route;
+use Joomla\CMS\Uri\Uri;
+
+HTMLHelper::_('stylesheet', 'com_salaov/css/salaov.css', ['version' => 'auto', 'relative' => true]);
+require_once __DIR__ . '/../helpers/calendar.php';
+
+$user = Factory::getApplication()->getIdentity();
+$canApproveDirectly = $user && !$user->guest && (
+    $user->authorise('core.admin') ||
+    $user->authorise('core.manage', 'com_salaov')
+);
+$days = [1 => 'Lunedi', 2 => 'Martedi', 3 => 'Mercoledi', 4 => 'Giovedi', 5 => 'Venerdi', 6 => 'Sabato', 7 => 'Domenica'];
+$returnUrl = base64_encode(Uri::getInstance()->toString());
+$loginUrl = Route::_('index.php?option=com_users&view=login&return=' . $returnUrl);
+?>
+<div class="salaov">
+  <header class="salaov-page-header">
+   <p>Seleziona un giorno disponibile dal calendario, scegli la fascia oraria e invia la richiesta. La prenotazione resta in attesa di approvazione.</p>
+  </header>
+
+  <?php if ($user->guest): ?>
+    <div class="alert alert-info salaov-alert mb-4">
+      <strong>Non serve registrarsi per inviare una richiesta.</strong>
+      Compila il modulo qui sotto: la prenotazione verrà salvata in attesa di approvazione.
+      Se sei un amministratore, <a href="<?php echo $loginUrl; ?>" class="alert-link">effettua il login</a>
+      per sbloccare le funzionalità riservate, come l'abilitazione dei menu e l'inserimento con approvazione diretta della richiesta.
+    </div>
+  <?php endif; ?>
+
+  <?php echo salaovRenderAvailabilityCalendar($this->slots ?? [], $this->availability ?? [], ['months' => 6, 'selectable' => true, 'inputSelector' => '#salaov_visit_date', 'scrollSelector' => '#salaov_booking_form', 'dayRules' => $this->dayRules ?? [], 'daySlots' => $this->daySlots ?? []]); ?>
+
+  <section id="salaov_booking_form" class="salaov-form-card">
+      <h2>Richiesta di prenotazione</h2>
+      <form method="post" action="<?php echo Route::_('index.php?option=com_salaov&task=booking.submit'); ?>" class="needs-validation" novalidate>
+        <div class="alert alert-danger d-none" role="alert" data-salaov-validation-alert tabindex="-1">
+          <strong>Completa i campi obbligatori.</strong>
+          Controlla Nome, Cognome ed Email prima di inviare la richiesta.
+        </div>
+        <div class="row g-4">
+          <div class="col-12"><h3 class="h5 border-bottom pb-2">Dati visita</h3></div>
+          <div class="col-md-6"><label for="salaov_visit_date" class="form-label">Data visita</label><input id="salaov_visit_date" class="form-control" type="date" name="visit_date" required></div>
+          <div class="col-md-6"><label class="form-label">Fascia oraria</label><select id="salaov_slot_id" class="form-select" name="slot_id" required>
+            <?php foreach ($this->slots as $s): ?><option value="w:<?php echo (int) $s->id; ?>" data-weekday="<?php echo (int) $s->weekday; ?>"><?php echo $days[(int) $s->weekday] . ' - ' . htmlspecialchars($s->title, ENT_QUOTES, 'UTF-8') . ' ' . substr($s->start_time, 0, 5) . '-' . substr($s->end_time, 0, 5) . ' (max ' . (int) $s->capacity . ')'; ?></option><?php endforeach; ?>
+            <?php foreach (($this->daySlots ?? []) as $s): ?><option value="d:<?php echo (int) $s->id; ?>" data-date="<?php echo htmlspecialchars($s->visit_date, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($s->visit_date . ' - ' . $s->title, ENT_QUOTES, 'UTF-8') . ' ' . substr($s->start_time, 0, 5) . '-' . substr($s->end_time, 0, 5) . ' (max ' . (int) $s->capacity . ')'; ?></option><?php endforeach; ?>
+          </select><div class="form-text">Le fasce vengono filtrate automaticamente dopo la scelta della data.</div></div>
+
+          <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Referente</h3></div>
+          <div class="col-md-6"><label class="form-label" for="salaov_first_name">Nome</label><input id="salaov_first_name" class="form-control" name="first_name" required><div class="invalid-feedback">Inserisci il nome.</div></div>
+          <div class="col-md-6"><label class="form-label" for="salaov_last_name">Cognome</label><input id="salaov_last_name" class="form-control" name="last_name" required><div class="invalid-feedback">Inserisci il cognome.</div></div>
+          <div class="col-md-6"><label class="form-label" for="salaov_email">Email</label><input id="salaov_email" class="form-control" type="email" name="email" required><div class="invalid-feedback">Inserisci un indirizzo email valido.</div></div>
+          <div class="col-md-6"><label class="form-label">Telefono</label><input class="form-control" name="phone"></div>
+
+          <div class="col-12 mt-4"><h3 class="h5 border-bottom pb-2">Gruppo visita</h3></div>
+          <div class="col-md-8"><label class="form-label" for="salaov_organization">Ente/Scuola o denominazione del gruppo</label><input id="salaov_organization" class="form-control" name="organization" placeholder="Per più visitatori, indica la denominazione del gruppo"><div class="form-text">Se la visita comprende più di una persona, inserisci una denominazione che identifichi il gruppo.</div><div class="invalid-feedback">Inserisci la denominazione del gruppo per una visita con più partecipanti.</div></div>
+          <div class="col-md-4"><label class="form-label" for="salaov_visitors">Numero visitatori</label><input id="salaov_visitors" class="form-control" type="number" name="visitors" min="1" value="1" required></div>
+          <div class="col-md-4">
+            <label class="form-label">Lingua visita</label>
+            <select class="form-select" name="language_id" required>
+            <option value="">Seleziona lingua</option>
+               <?php foreach (($this->languages ?? []) as $language): ?>
+                   <option value="<?php echo (int) $language->id; ?>">
+              <?php echo htmlspecialchars($language->title, ENT_QUOTES, 'UTF-8'); ?>
+                   </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-md-8">
+    <label class="form-label">Livello visita</label>
+    <select class="form-select" name="visit_level_id" required>
+      <div class="salaov-level-preview mt-3">
+    <?php foreach (($this->visitLevels ?? []) as $level): ?>
+        <?php
+        $icon = $level->icon ?: 'tier_other_neutral.svg';
+        ?>
+        <div class="salaov-level-preview-item">
+            <img
+                src="<?php echo Uri::root(true); ?>/media/com_salaov/icons/visit-levels/<?php echo htmlspecialchars($icon, ENT_QUOTES, 'UTF-8'); ?>"
+                alt=""
+                class="salaov-level-preview-icon"
+            >
+            <span><?php echo htmlspecialchars($level->title, ENT_QUOTES, 'UTF-8'); ?></span>
+        </div>
+    <?php endforeach; ?>
+</div>
+        <option value="">Seleziona livello visita</option>
+        <?php foreach (($this->visitLevels ?? []) as $level): ?>
+            <option value="<?php echo (int) $level->id; ?>">
+                <?php echo htmlspecialchars($level->title, ENT_QUOTES, 'UTF-8'); ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+    <div class="form-text">
+        Indica il livello della visita per aiutare l'organizzazione e l'assegnazione del personale.
+    </div>
+</div>
+          </div>
+          <div class="col-12"><label class="form-label">Note</label><textarea class="form-control" name="notes" rows="4" placeholder="Indica eventuali esigenze o informazioni utili"></textarea></div>
+        </div>
+        <?php if ($canApproveDirectly): ?>
+    <div class="col-12 mt-4">
+        <label class="form-label" for="salaov_staff_id">Personale assegnato alla visita</label>
+        <select class="form-select" id="salaov_staff_id" name="staff_id">
+            <option value="">Nessuna assegnazione</option>
+            <?php foreach (($this->staff ?? []) as $staff): ?>
+                <option value="<?php echo (int) $staff->id; ?>">
+                    <?php echo htmlspecialchars(
+                        $staff->name . (!empty($staff->spoken_language) ? ' - ' . $staff->spoken_language : ''),
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <div class="form-text">Campo visibile solo agli utenti con permessi amministrativi.</div>
+    </div>
+    <div class="col-12">
+        <div class="alert alert-info mb-0">
+            <div class="form-check">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="salaov_approve_now"
+                    name="approve_now"
+                    value="1"
+                >
+                <label class="form-check-label fw-bold" for="salaov_approve_now">
+                    Approva direttamente questa richiesta
+                </label>
+            </div>
+            <div class="small mt-1">
+                Opzione visibile solo agli utenti con permessi amministrativi. Se selezionata, la prenotazione verrà salvata direttamente come approvata.
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+        <input type="hidden" name="return" value="<?php echo htmlspecialchars($returnUrl, ENT_QUOTES, 'UTF-8'); ?>">
+        <?php echo HTMLHelper::_('form.token'); ?>
+        <div class="d-flex justify-content-end mt-4"><button type="submit" class="btn btn-primary btn-lg">Invia richiesta</button></div>
+      </form>
+  </section>
+</div>
+<script>
+(function(){
+  var dateInput=document.getElementById('salaov_visit_date');
+  var slotSelect=document.getElementById('salaov_slot_id');
+  if(!dateInput || !slotSelect) return;
+  function weekday(iso){ var d=new Date(iso+'T00:00:00'); return d.getDay()===0?7:d.getDay(); }
+  function filterSlots(){
+    var date=dateInput.value, wd=date?weekday(date):0, hasSpecific=false, first=null;
+    Array.prototype.forEach.call(slotSelect.options,function(o){ if(o.dataset.date===date) hasSpecific=true; });
+    Array.prototype.forEach.call(slotSelect.options,function(o){
+      var show = hasSpecific ? (o.dataset.date===date) : (!o.dataset.date && String(o.dataset.weekday)===String(wd));
+      o.hidden=!show; o.disabled=!show; if(show && !first) first=o;
+    });
+    if(first) slotSelect.value=first.value;
+  }
+  dateInput.addEventListener('change',filterSlots); filterSlots();
+
+  var visitorsInput=document.getElementById('salaov_visitors');
+  var organizationInput=document.getElementById('salaov_organization');
+  function updateOrganizationRequirement(){
+    if(!visitorsInput || !organizationInput) return;
+    organizationInput.required=Number(visitorsInput.value)>1;
+  }
+  if(visitorsInput){
+    visitorsInput.addEventListener('input',updateOrganizationRequirement);
+    visitorsInput.addEventListener('change',updateOrganizationRequirement);
+  }
+  updateOrganizationRequirement();
+
+  Array.prototype.forEach.call(document.querySelectorAll('.needs-validation'), function(form) {
+    var validationAlert=form.querySelector('[data-salaov-validation-alert]');
+    form.addEventListener('submit', function(event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+        if(validationAlert){ validationAlert.classList.remove('d-none'); validationAlert.focus(); }
+      } else if(validationAlert) {
+        validationAlert.classList.add('d-none');
+      }
+      form.classList.add('was-validated');
+    });
+  });
+})();
+</script>

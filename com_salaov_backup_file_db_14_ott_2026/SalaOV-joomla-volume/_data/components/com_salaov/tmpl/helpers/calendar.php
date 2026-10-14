@@ -1,0 +1,376 @@
+<?php
+\defined('_JEXEC') or die;
+
+if (!function_exists('salaovRenderAvailabilityCalendar')) {
+    function salaovBuildDayStatus(array $slots, array $availability, array $dayRules = [], int $months = 6, array $daySlots = []): array
+    {
+        $slotsByWeekday = [];
+        foreach ($slots as $slot) {
+            $weekday = (int) $slot->weekday;
+            $slotsByWeekday[$weekday] = ($slotsByWeekday[$weekday] ?? 0) + (int) $slot->capacity;
+        }
+        $specificCapacity = [];
+        foreach ($daySlots as $slot) {
+            $d = (string) $slot->visit_date;
+            $specificCapacity[$d] = ($specificCapacity[$d] ?? 0) + (int) $slot->capacity;
+        }
+        $rules = [];
+        foreach ($dayRules as $rule) {
+            $rules[(string) $rule->visit_date] = $rule;
+        }
+        $bookedByDate = [];
+        foreach ($availability as $row) {
+            $date = (string) $row->visit_date;
+            $bookedByDate[$date] = [
+                'pending' => (int) ($row->pending_visitors ?? 0),
+                'approved' => (int) ($row->approved_visitors ?? 0),
+            ];
+        }
+        $today = new DateTimeImmutable('today');
+        $cursor = $today->modify('first day of this month');
+        $end = $cursor->modify('+' . max(1, $months - 1) . ' months')->modify('last day of this month');
+        $days = [];
+        while ($cursor <= $end) {
+            $dateKey = $cursor->format('Y-m-d');
+            $weekday = (int) $cursor->format('N');
+            $capacity = $slotsByWeekday[$weekday] ?? 0;
+            $availableRule = 1;
+            $note = '';
+            if (isset($specificCapacity[$dateKey])) {
+                $capacity = (int) $specificCapacity[$dateKey];
+            }
+            if (isset($rules[$dateKey])) {
+                $availableRule = (int) $rules[$dateKey]->available;
+                $capacity = isset($specificCapacity[$dateKey]) ? min($capacity, (int) $rules[$dateKey]->capacity) : (int) $rules[$dateKey]->capacity;
+                $note = (string) ($rules[$dateKey]->note ?? '');
+            }
+            $pending = $bookedByDate[$dateKey]['pending'] ?? 0;
+            $approved = $bookedByDate[$dateKey]['approved'] ?? 0;
+            $used = $pending + $approved;
+            if ($cursor < $today || !$availableRule || $capacity <= 0 || $used >= $capacity) {
+                $status = 'unavailable'; $label = 'Non disponibile';
+            } elseif ($pending > 0) {
+                $status = 'pending'; $label = 'Richieste in attesa';
+            } else {
+                $status = 'available'; $label = 'Disponibile';
+            }
+            $days[$dateKey] = compact('status','label','capacity','used','pending','approved','note') + ['date' => $cursor];
+            $cursor = $cursor->modify('+1 day');
+        }
+        return $days;
+    }
+
+    function salaovRenderAvailabilityCalendar(array $slots, array $availability, array $options = []): string
+    {
+        $months = (int) ($options['months'] ?? 6);
+        $dayRules = $options['dayRules'] ?? [];
+        $selectable = !empty($options['selectable']);
+        $inputSelector = $options['inputSelector'] ?? '#salaov_visit_date';
+        $scrollSelector = $options['scrollSelector'] ?? '';
+        $daySlots = $options['daySlots'] ?? [];
+        $days = salaovBuildDayStatus($slots, $availability, $dayRules, $months, $daySlots);
+        $monthNames = [1=>'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+        $weekdayNames = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+        $weekdayFullNames = [1=>'Lun',2=>'Mar',3=>'Mer',4=>'Gio',5=>'Ven',6=>'Sab',7=>'Dom'];
+        $grouped = [];
+        foreach ($days as $dateKey => $info) { $grouped[$info['date']->format('Y-m')][$dateKey] = $info; }
+        $uid = 'salaovcal' . substr(md5((string) microtime(true)), 0, 8);
+        ob_start(); ?>
+        <style>
+#<?php echo $uid; ?>.salaov-calendar{
+    width:100%!important;
+    max-width:900px!important;
+    margin:1rem auto 1.5rem!important;
+    border:1px solid #d6dee8!important;
+    border-radius:14px!important;
+    background:#fff!important;
+    overflow:hidden!important;
+    box-shadow:0 8px 24px rgba(15,23,42,.08)!important;
+}
+
+#<?php echo $uid; ?> .card-body{
+    padding:14px!important;
+}
+
+#<?php echo $uid; ?> .salaov-legend{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:3px!important;
+    font-size:.78rem!important;
+    line-height:1.15!important;
+}
+
+#<?php echo $uid; ?> .salaov-legend-row{
+    display:flex!important;
+    align-items:center!important;
+    gap:6px!important;
+    white-space:nowrap!important;
+}
+
+#<?php echo $uid; ?> .salaov-dot{
+    display:inline-block!important;
+    width:10px!important;
+    height:10px!important;
+    min-width:10px!important;
+    border-radius:50%!important;
+    border:1px solid rgba(0,0,0,.22)!important;
+}
+
+#<?php echo $uid; ?> .salaov-dot-available{background:#198754!important}
+#<?php echo $uid; ?> .salaov-dot-pending{background:#ffc107!important}
+#<?php echo $uid; ?> .salaov-dot-unavailable{background:#dc3545!important}
+
+#<?php echo $uid; ?> .salaov-legend-count{
+    font-size:.72rem!important;
+    font-weight:700!important;
+    color:#475569!important;
+}
+
+#<?php echo $uid; ?> .salaov-weekdays,
+#<?php echo $uid; ?> .salaov-days{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    gap:4px!important;
+    width:100%!important;
+}
+
+#<?php echo $uid; ?> .salaov-weekdays span{
+    text-align:center!important;
+    font-weight:800!important;
+    font-size:.72rem!important;
+    padding:4px 0!important;
+    color:#64748b!important;
+}
+
+#<?php echo $uid; ?> .salaov-day,
+#<?php echo $uid; ?> .salaov-empty{
+    width:100%!important;
+    min-width:0!important;
+    height:86px!important;
+    min-height:86px!important;
+    border-radius:9px!important;
+    box-sizing:border-box!important;
+}
+
+#<?php echo $uid; ?> .salaov-empty{
+    visibility:hidden!important;
+}
+
+#<?php echo $uid; ?> .salaov-day{
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:1px!important;
+    text-align:center!important;
+    line-height:1!important;
+    padding:3px 2px!important;
+    overflow:visible!important;
+    font-weight:900!important;
+    border:1px solid rgba(0,0,0,.15)!important;
+}
+
+#<?php echo $uid; ?> .salaov-day-weekday,
+#<?php echo $uid; ?> .salaov-day-number,
+#<?php echo $uid; ?> .salaov-day-caption{
+    display:block!important;
+    width:100%!important;
+    font-weight:900!important;
+    text-align:center!important;
+    line-height:1.1!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    white-space:nowrap!important;
+}
+
+#<?php echo $uid; ?> .salaov-day-weekday{
+    font-size:.72rem!important;
+}
+
+#<?php echo $uid; ?> .salaov-day-number{
+    font-size:1.25rem!important;
+    line-height:1!important;
+}
+
+#<?php echo $uid; ?> .salaov-day-caption{
+    min-height:0!important;
+    margin-top:1px!important;
+    font-size:.64rem!important;
+    line-height:1!important;
+}
+}
+#<?php echo $uid; ?> .salaov-day-available{background:#15803d!important;color:#fff!important}
+#<?php echo $uid; ?> .salaov-day-pending{background:#facc15!important;color:#1f2937!important}
+#<?php echo $uid; ?> .salaov-day-unavailable{background:#b91c1c!important;color:#fff!important}
+
+#<?php echo $uid; ?> .salaov-day-selected{
+    outline:3px solid #0f172a!important;
+    outline-offset:2px!important;
+}
+
+#<?php echo $uid; ?> .salaov-prev,
+#<?php echo $uid; ?> .salaov-next{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:48px!important;
+    height:48px!important;
+    padding:0!important;
+    border:2px solid #1d4ed8!important;
+    border-radius:12px!important;
+    background:#2563eb!important;
+    color:#fff!important;
+    font-size:2rem!important;
+    font-weight:800!important;
+    line-height:1!important;
+    box-shadow:0 4px 10px rgba(37,99,235,.28)!important;
+    transition:background-color .15s ease,transform .15s ease,box-shadow .15s ease!important;
+}
+
+#<?php echo $uid; ?> .salaov-prev:hover:not(:disabled),
+#<?php echo $uid; ?> .salaov-next:hover:not(:disabled){
+    background:#1d4ed8!important;
+    transform:translateY(-1px)!important;
+    box-shadow:0 6px 14px rgba(37,99,235,.35)!important;
+}
+
+#<?php echo $uid; ?> .salaov-prev:focus-visible,
+#<?php echo $uid; ?> .salaov-next:focus-visible{
+    outline:3px solid rgba(37,99,235,.35)!important;
+    outline-offset:3px!important;
+}
+
+#<?php echo $uid; ?> .salaov-prev:disabled,
+#<?php echo $uid; ?> .salaov-next:disabled{
+    background:#cbd5e1!important;
+    border-color:#94a3b8!important;
+    color:#475569!important;
+    box-shadow:none!important;
+    opacity:1!important;
+}
+
+@media(max-width:576px){
+    #<?php echo $uid; ?> .salaov-weekdays,
+    #<?php echo $uid; ?> .salaov-days{
+        gap:3px!important;
+    }
+
+    #<?php echo $uid; ?> .salaov-day,
+#<?php echo $uid; ?> .salaov-empty{
+    height:112px!important;
+    min-height:112px!important;
+    box-sizing:border-box!important;
+}
+    #<?php echo $uid; ?> .salaov-day-weekday{
+        font-size:.62rem!important;
+    }
+
+    #<?php echo $uid; ?> .salaov-day-number{
+        font-size:1.05rem!important;
+    }
+
+   #<?php echo $uid; ?> .salaov-day-caption{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:16px!important;
+    margin-top:3px!important;
+    color:inherit!important;
+    font-size:.68rem!important;
+    font-weight:900!important;
+    line-height:1.1!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+}
+}
+</style>
+        <section id="<?php echo $uid; ?>" class="salaov-calendar card shadow-sm" aria-label="Calendario disponibilita Sala OV">
+            <div class="card-body p-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <div><h2 class="h5 mb-1">Calendario disponibilità</h2></div>
+                    
+   <div class="salaov-legend small">
+    <div class="salaov-legend-row">
+        <span class="salaov-dot salaov-dot-available"></span>
+        <span>Disponibile</span>
+    </div>
+    <div class="salaov-legend-row">
+        <span class="salaov-dot salaov-dot-pending"></span>
+        <span>Richieste in attesa</span>
+    </div>
+    <div class="salaov-legend-row">
+        <span class="salaov-dot salaov-dot-unavailable"></span>
+        <span>Non disponibile</span>
+    </div>
+    <div class="salaov-legend-count">0/20 = prenotati/capienza</div>
+</div>
+                
+            </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary salaov-prev" aria-label="Mese precedente" title="Mese precedente">&lsaquo;</button>
+                    <strong class="salaov-current-month"></strong>
+                    <button type="button" class="btn btn-sm btn-outline-secondary salaov-next" aria-label="Mese successivo" title="Mese successivo">&rsaquo;</button>
+                </div>
+                <div class="salaov-months">
+                <?php $idx=0; foreach ($grouped as $monthKey => $monthDays): $first = reset($monthDays)['date']; $firstOfMonth=$first->modify('first day of this month'); $offset=(int)$firstOfMonth->format('N')-1; ?>
+                    <div class="salaov-month" data-index="<?php echo $idx; ?>" data-title="<?php echo $monthNames[(int)$first->format('n')] . ' ' . $first->format('Y'); ?>" <?php echo $idx ? 'hidden' : ''; ?>>
+                        <div class="salaov-weekdays"><?php foreach($weekdayNames as $w): ?><span><?php echo $w; ?></span><?php endforeach; ?></div>
+                        <div class="salaov-days">
+                            <?php for($i=0;$i<$offset;$i++): ?><span></span><?php endfor; ?>
+                            <?php foreach($monthDays as $dateKey=>$info):
+                                $disabled = (!$selectable || $info['status']==='unavailable');
+                                $remaining = max(0, (int) $info['capacity'] - (int) $info['used']);
+                                $dayNumber = $info['date']->format('j');
+                                $weekdayNumber = (int) $info['date']->format('N');
+                                $weekdayShort = $weekdayNames[$weekdayNumber - 1] ?? '';
+                                $weekdayFull = $weekdayFullNames[$weekdayNumber] ?? '';
+                                $monthLabel = $monthNames[(int) $info['date']->format('n')] ?? '';
+                                $caption = $weekdayFull . ' ' . $dayNumber . ' ' . $monthLabel . ' - Visitatori ' . (int) $info['used'] . '/' . (int) $info['capacity'];
+                                if ($info['status'] === 'available') { $style = 'background:#198754;color:#ffffff;border-color:#198754;'; }
+                                elseif ($info['status'] === 'pending') { $style = 'background:#ffc107;color:#212529;border-color:#ffc107;'; }
+                                else { $style = 'background:#dc3545;color:#ffffff;border-color:#dc3545;'; }
+                                $title=$info['label'].' - '.$weekdayFull.' '.$dayNumber.' '.$monthLabel.' '.$info['date']->format('Y').' - visitatori '.(int)$info['used'].'/'.(int)$info['capacity'].' - posti residui '.$remaining.($info['note']?' - '.$info['note']:''); ?>
+                                <button type="button" class="salaov-day salaov-day-<?php echo $info['status']; ?>" style="<?php echo $style; ?>" data-date="<?php echo htmlspecialchars($dateKey, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars($caption, ENT_QUOTES, 'UTF-8'); ?>" title="<?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $disabled?'disabled':''; ?>>
+                                    <strong class="salaov-day-weekday"><?php echo htmlspecialchars($weekdayFull, ENT_QUOTES, 'UTF-8'); ?></strong><br>
+                                    <strong class="salaov-day-number"><?php echo str_pad((string) $dayNumber, 2, '0', STR_PAD_LEFT); ?></strong><br>
+                                    <strong class="salaov-day-caption">prenotati <?php echo (int) $info['used']; ?>/<?php echo (int) $info['capacity']; ?></strong>
+                                </button>
+                            <?php endforeach; ?>
+                            <?php
+                                $lastInfo = end($monthDays);
+                                $lastWeekday = $lastInfo ? (int) $lastInfo['date']->format('N') : 7;
+                                for ($i = $lastWeekday; $i < 7; $i++):
+                            ?>
+                                <span class="salaov-empty" aria-hidden="true"></span>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                <?php $idx++; endforeach; ?>
+                </div>
+            </div>
+        </section>
+        <script>
+        (function(){
+            var root=document.getElementById('<?php echo $uid; ?>'); if(!root) return;
+            var months=[].slice.call(root.querySelectorAll('.salaov-month')); var i=0; var title=root.querySelector('.salaov-current-month');
+            function show(n){ i=Math.max(0,Math.min(months.length-1,n)); months.forEach(function(m,k){m.hidden=k!==i;}); title.textContent=months[i]?months[i].dataset.title:''; root.querySelector('.salaov-prev').disabled=i===0; root.querySelector('.salaov-next').disabled=i===months.length-1; }
+            root.querySelector('.salaov-prev').addEventListener('click',function(){show(i-1);}); root.querySelector('.salaov-next').addEventListener('click',function(){show(i+1);}); show(0);
+            <?php if ($selectable): ?>root.addEventListener('click',function(e){ var day=e.target.closest('.salaov-day:not(:disabled)'); if(!day) return; var input=document.querySelector(<?php echo json_encode($inputSelector); ?>); 
+                                                                                 
+if(input){
+    input.value = day.dataset.date;
+
+    var bookingUrl = '<?php echo \Joomla\CMS\Router\Route::_('index.php?option=com_salaov&view=booking'); ?>';
+    bookingUrl += '&visit_date=' + encodeURIComponent(day.dataset.date);
+
+   window.location.href = bookingUrl + '#salaov_booking_form';
+}
+                                                                                 root.querySelectorAll('.salaov-day-selected').forEach(function(el){el.classList.remove('salaov-day-selected')}); day.classList.add('salaov-day-selected'); var scrollTarget=document.querySelector(<?php echo json_encode($scrollSelector); ?>); if(scrollTarget){ window.requestAnimationFrame(function(){ scrollTarget.scrollIntoView({behavior:'smooth',block:'start'}); }); } });<?php endif; ?>
+        })();
+        </script>
+        <?php return ob_get_clean();
+    }
+}

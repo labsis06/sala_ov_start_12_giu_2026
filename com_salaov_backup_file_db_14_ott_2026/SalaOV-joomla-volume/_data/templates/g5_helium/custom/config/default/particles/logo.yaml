@@ -1,0 +1,9 @@
+enabled: '1'
+url: ''
+target: _self
+image: 'gantry-media://sala12.png'
+height: 150px
+link: '0'
+svg: ''
+text: ''
+class: 'g-logo g-logo-helium'

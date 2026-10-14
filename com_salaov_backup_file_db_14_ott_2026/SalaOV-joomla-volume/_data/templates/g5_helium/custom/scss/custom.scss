@@ -1,0 +1,35 @@
+/* Barra superiore Sala OV */
+#g-header,
+#g-navigation {
+    background: linear-gradient(135deg, #0b2d4d 0%, #164f78 100%) !important;
+    color: #ffffff;
+}
+
+/* Testi del menu */
+#g-header a,
+#g-navigation a,
+.g-main-nav .g-toplevel > li > .g-menu-item-container {
+    color: #ffffff !important;
+}
+
+/* Voce attiva e passaggio del mouse */
+.g-main-nav .g-toplevel > li:hover > .g-menu-item-container,
+.g-main-nav .g-toplevel > li.active > .g-menu-item-container {
+    color: #f4b41a !important;
+}
+
+/* Sottolineatura della voce attiva */
+.g-main-nav .g-toplevel > li.active > .g-menu-item-container {
+    border-bottom: 3px solid #f4b41a;
+}
+
+/* Area del logo */
+#g-header .g-grid,
+#g-navigation .g-grid {
+    align-items: center;
+}
+
+/* Effetto leggermente più elegante sulla barra */
+#g-header {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
+}

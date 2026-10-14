@@ -1,0 +1,82 @@
+/*39d05e1e96e42332c668a53f86ddf271*/
+#g-header,#g-navigation{background:linear-gradient(135deg, #0b2d4d 0%, #164f78 100%) !important;color:#ffffff}#g-header a,#g-navigation a,.g-main-nav .g-toplevel>li>.g-menu-item-container{color:#ffffff !important}.g-main-nav .g-toplevel>li:hover>.g-menu-item-container,.g-main-nav .g-toplevel>li.active>.g-menu-item-container{color:#f4b41a !important}.g-main-nav .g-toplevel>li.active>.g-menu-item-container{border-bottom:3px solid #f4b41a}#g-header .g-grid,#g-navigation .g-grid{align-items:center}#g-header{box-shadow:0 4px 14px rgba(0, 0, 0, 0.18)}
+/* Logo Sala OV più grande */
+.g-logo.g-logo-helium {
+    width: 520px !important;
+    max-width: none !important;
+}
+
+.g-logo.g-logo-helium img,
+.g-logo.g-logo-helium svg {
+    width: 650px !important;
+    height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: contain !important;
+}
+@media only screen and (max-width: 768px) {
+    .g-logo.g-logo-helium,
+    .g-logo.g-logo-helium img {
+        width: 90vw !important;
+        max-width: 90vw !important;
+        height: auto !important;
+    }
+}
+
+/* Barra superiore più compatta */
+#g-header {
+    padding: 1rem 0 !important;
+    min-height: 0 !important;
+}
+
+#g-navigation {
+    min-height: 0 !important;
+    padding-top: .35rem !important;
+    padding-bottom: .35rem !important;
+}
+
+/* Logo più compatto verticalmente */
+#g-header .g-logo,
+#g-navigation .g-logo {
+    line-height: 1 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+#g-header .g-logo img,
+#g-navigation .g-logo img,
+#g-header .g-logo.g-logo-helium img,
+#g-navigation .g-logo.g-logo-helium img {
+    width: 520px !important;
+    height: auto !important;
+    max-height: 105px !important;
+    object-fit: contain !important;
+}
+
+/* Menu più compatto */
+#g-navigation .g-main-nav .g-toplevel {
+    line-height: 1.4 !important;
+}
+
+#g-navigation .g-main-nav .g-toplevel > li > .g-menu-item-container {
+    padding-top: .15rem !important;
+    padding-bottom: .15rem !important;
+}
+
+/* Ingrandisce realmente logo e scritta */
+#g-header .g-logo img,
+#g-navigation .g-logo img,
+.g-logo.g-logo-helium img {
+    transform: scale(1.8) !important;
+    transform-origin: left center !important;
+    max-height: none !important;
+    height: auto !important;
+}
+
+/* Mantiene il logo allineato verticalmente */
+#g-header .g-logo,
+#g-navigation .g-logo {
+    display: flex !important;
+    align-items: center !important;
+    transform-origin: left center !important;
+}

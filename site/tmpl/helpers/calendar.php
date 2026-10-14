@@ -366,7 +366,7 @@ if(input){
     var bookingUrl = '<?php echo \Joomla\CMS\Router\Route::_('index.php?option=com_salaov&view=booking'); ?>';
     bookingUrl += '&visit_date=' + encodeURIComponent(day.dataset.date);
 
-    window.location.href = bookingUrl;
+     window.location.href = bookingUrl + '#salaov_booking_form';
 }
                                                                                  root.querySelectorAll('.salaov-day-selected').forEach(function(el){el.classList.remove('salaov-day-selected')}); day.classList.add('salaov-day-selected'); var scrollTarget=document.querySelector(<?php echo json_encode($scrollSelector); ?>); if(scrollTarget){ window.requestAnimationFrame(function(){ scrollTarget.scrollIntoView({behavior:'smooth',block:'start'}); }); } });<?php endif; ?>
         })();
